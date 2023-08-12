@@ -26,7 +26,7 @@ declare global {
 
 const webRTCConfig = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
-function App() {
+function Home() {
   const [connection, setConnection] = useState<HubConnection>();
   const [uid, setUid] = useState<number>(0);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -237,4 +237,4 @@ function App() {
   );
 }
 
-export default App;
+export default Home;
