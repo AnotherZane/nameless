@@ -5,31 +5,25 @@ import {
   CssBaseline,
   StyledEngineProvider,
   ThemeProvider,
-  createTheme,
 } from "@mui/material";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
+import Test from "./pages/Test";
+import { createAstralTheme } from "./themes";
 import Home from "./pages/Home";
 
 const rootElement = document.getElementById("root");
 const root = ReactDOM.createRoot(rootElement as HTMLElement);
 
-const theme = createTheme({
-  palette: {
-    mode: "dark",
-    // primary: {
-    //   main: "#663399",
-    // },
-  },
-  typography: {
-    fontFamily: "Noto Sans, sans-serif",
-  },
-  spacing: 1,
-});
+const theme = createAstralTheme(rootElement);
 
 const defaultRouter = createBrowserRouter([
   {
     path: "/",
     element: <Home />,
+  },
+  {
+    path: "/test",
+    element: <Test />,
   },
 ]);
 
