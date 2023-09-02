@@ -1,7 +1,7 @@
 import React, { useContext } from "react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@mui/material";
-import HubConnector from "../astral/HubConnector";
+import { HubConnector } from "../astral/connectors";
 import { useNavigate } from "react-router-dom";
 import { useHubConnectorStore } from "../state";
 
@@ -41,7 +41,7 @@ const webRTCConfig = {
 const Test = () => {
   // const [connection, setConnection] = useState<HubConnection>();
   // const [connector, setConnector] = useState<HubConnector>();
-  const [connector, startConnector] = useHubConnectorStore(s => [s.connector, s.start]);
+  const connector = useHubConnectorStore((s) => s.connector);
 
   const navigate = useNavigate();
 
@@ -104,11 +104,11 @@ const Test = () => {
     };
   }, [dataChannel]);
 
-  useEffect(() => {
-    if (!startConnector) return;
+  // useEffect(() => {
+  //   if (!startConnector) return;
 
-    startConnector();
-  }, [startConnector]);
+  //   startConnector();
+  // }, [startConnector]);
 
   // useEffect(() => {
   //   if (!connection) return;
@@ -264,7 +264,7 @@ const Test = () => {
 
     // await connection.send("shareFiles", files);
 
-    const code = await connector.createShareCode();
+    const code = await connector.createShare();
     console.log(code);
   };
 
@@ -285,12 +285,16 @@ const Test = () => {
         <Button variant="outlined" size="small" onClick={test}>
           Share
         </Button>
-        <Button variant="outlined" size="small" onClick={() => navigate("/test")}>
+        <Button
+          variant="outlined"
+          size="small"
+          onClick={() => navigate("/test")}
+        >
           Test
         </Button>
       </div>
     </div>
   );
-}
+};
 
-export default Test;
+export { Test };

@@ -30,6 +30,15 @@ const createAstralTheme = (
   rootElement: HTMLElement | null,
   darkMode = true
 ) => {
+
+  // Set dark attribute to let tailwind know it should use dark variants of colors
+  if (darkMode) {
+    rootElement?.setAttribute("class", "dark");
+  }
+  else {
+	rootElement?.setAttribute("class", "");
+  }
+
   return createTheme({
     palette: {
       mode: darkMode ? "dark" : "light",
@@ -97,6 +106,34 @@ const createAstralTheme = (
       MuiCssBaseline: {
         styleOverrides: {
           // DIN Regular 400
+          body: {
+            margin: "0 5%"
+          },
+          "@media (min-width: 640px)": {
+            body: {
+              margin: "0 5%"
+            }
+          },
+          "@media (min-width: 768px)": {
+            body: {
+              margin: "0 7.5%"
+            }
+          },
+          "@media (min-width: 1024px)": {
+            body: {
+              margin: "0 10%"
+            }
+          },
+          "@media (min-width: 1280px)": {
+            body: {
+              margin: "0 12.5%"
+            }
+          },
+          "@media (min-width: 1536px)": {
+            body: {
+              margin: "0 15%"
+            }
+          },
           "@font-face": {
             fontFamily: '"DIN"',
             fontDisplay: "swap",

@@ -1,150 +1,113 @@
-import React from "react";
-import { Button, Typography } from "@mui/material";
-
-declare module "@mui/material/Button" {
-  interface ButtonPropsColorOverrides {
-    accent: true;
-  }
-}
+import {
+  Avatar,
+  Button,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemText,
+} from "@mui/material";
+import React, { useEffect } from "react";
+import { useHubConnectorStore, useReceiverStore, useSenderStore, useShareStore } from "../state";
+import { formatShareLink } from "../utils";
+import { FileSelector } from "../components";
+import { ShareRole } from "../astral/enums";
+import { InsertDriveFile } from "@mui/icons-material";
+import { fileSize } from "humanize-plus";
 
 const Home = () => {
+  const hub = useHubConnectorStore((s) => s.connector);
+  const hubConnected = useHubConnectorStore((s) => s.connected);
+
+  const shareRole = useShareStore((s) => s.role);
+  const shareCode = useShareStore((s) => s.code);
+  const sharedFiles = useSenderStore((s) => s.sharedFiles);
+
+  const sharedFileMetadata = useReceiverStore((s) => s.sharedMetadata);
+
+  useEffect(() => {
+    if (shareRole == ShareRole.Receiver) {
+      if (!hubConnected) {
+        hub.start();
+        return;
+      }
+
+      hub.requestMetadata(shareCode!);
+    }
+  }, [hubConnected]);
+
+  const shareFiles = async () => {
+    if (sharedFiles.length < 1) return;
+
+    await hub.start();
+    await hub.createShare();
+  };
+
+  const downloadFiles = async () => {
+    await hub.requestRTC(shareCode!);
+  };
+
   return (
     <>
-      <Typography variant="h1">H1 Material UI + Tailwind CSS</Typography>
-      <Typography variant="h2">H1 Material UI + Tailwind CSS</Typography>
-      <Typography variant="h3">H1 Material UI + Tailwind CSS</Typography>
-      <Typography variant="h4">H1 Material UI + Tailwind CSS</Typography>
-      <Typography variant="h5">H1 Material UI + Tailwind CSS</Typography>
-      <Typography variant="h6">H1 Material UI + Tailwind CSS</Typography>
-      <h1>H1 Material UI + Tailwind CSS</h1>
-      <h2>H2 Material UI + Tailwind CSS</h2>
-      <h3>H3 Material UI + Tailwind CSS</h3>
-      <h4>H4 Material UI + Tailwind CSS</h4>
-      <h5>H5 Material UI + Tailwind CSS</h5>
-      <h6>H6 Material UI + Tailwind CSS</h6>
-      <p className="font-normal">
-        DIN Regular 400 - Lorem ipsum dolor sit amet, consectetur adipiscing
-        elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-        Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi
-        ut aliquip ex ea commodo consequat. Duis aute irure dolor in
-        reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
-        pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa
-        qui officia deserunt mollit anim id est laborum.
-      </p>
-      <p className="font-medium">
-        DIN Medium 500 - Lorem ipsum dolor sit amet, consectetur adipiscing
-        elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-        Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi
-        ut aliquip ex ea commodo consequat. Duis aute irure dolor in
-        reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
-        pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa
-        qui officia deserunt mollit anim id est laborum.
-      </p>
-      <p className="font-bold">
-        DIN Bold 700 - Lorem ipsum dolor sit amet, consectetur adipiscing elit,
-        sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
-        enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-        aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit
-        in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
-        Excepteur sint occaecat cupidatat non proident, sunt in culpa qui
-        officia deserunt mollit anim id est laborum.
-      </p>
-
-      <div>
-        <Button className="m-2" variant="outlined" size="large">
-          Primary
-        </Button>
-        <Button className="m-2" variant="outlined" size="medium">
-          Primary
-        </Button>
-        <Button className="m-2" variant="outlined" size="small">
-          Primary
-        </Button>
-
-        <Button color="accent" className="m-2" variant="outlined" size="large">
-          Accent
-        </Button>
-        <Button color="accent" className="m-2" variant="outlined" size="medium">
-          Accent
-        </Button>
-        <Button color="accent" className="m-2" variant="outlined" size="small">
-          Accent
-        </Button>
-      </div>
-
-      <div>
-        <Button className="m-2" variant="contained" size="large">
-          Primary
-        </Button>
-        <Button className="m-2" variant="contained" size="medium">
-          Primary
-        </Button>
-        <Button className="m-2" variant="contained" size="small">
-          Primary
-        </Button>
-        <Button color="accent" className="m-2" variant="contained" size="large">
-          Accent
-        </Button>
-        <Button
-          color="accent"
-          className="m-2"
-          variant="contained"
-          size="medium"
-        >
-          Accent
-        </Button>
-        <Button color="accent" className="m-2" variant="contained" size="small">
-          Accent
-        </Button>
-
-        <Button
-          color="secondary"
-          className="m-2"
-          variant="contained"
-          size="large"
-        >
-          Secondary
-        </Button>
-        <Button
-          color="secondary"
-          className="m-2"
-          variant="contained"
-          size="medium"
-        >
-          Secondary
-        </Button>
-        <Button
-          color="secondary"
-          className="m-2"
-          variant="contained"
-          size="small"
-        >
-          Secondary
-        </Button>
-      </div>
-
-      <div>
-        <Button className="m-2" variant="text" size="large">
-          Primary
-        </Button>
-        <Button className="m-2" variant="text" size="medium">
-          Primary
-        </Button>
-        <Button className="m-2" variant="text" size="small">
-          Primary
-        </Button>
-        <Button color="accent" className="m-2" variant="text" size="large">
-          Accent
-        </Button>
-        <Button color="accent" className="m-2" variant="text" size="medium">
-          Accent
-        </Button>
-        <Button color="accent" className="m-2" variant="text" size="small">
-          Accent
-        </Button>
+      <div className="flex flex-col w-fit">
+        {shareRole == ShareRole.Sharer ? (
+          <>
+            <FileSelector />
+            <p
+              className="hover:text-primary-base"
+              onClick={() => {
+                if (!shareCode) return;
+                navigator.clipboard.writeText(
+                  formatShareLink(document.location, shareCode)
+                );
+              }}
+            >
+              {shareCode
+                ? formatShareLink(document.location, shareCode)
+                : "Click Share to Generate a Link!"}
+            </p>
+            <Button variant="contained" size="large" onClick={shareFiles}>
+              Share
+            </Button>
+          </>
+        ) : (
+          <>
+            <List dense>
+              {sharedFileMetadata.map((file, idx) => (
+                <ListItem
+                  key={idx}
+                  // secondaryAction={
+                  //   <IconButton
+                  //     edge="end"
+                  //     size="small"
+                  //     aria-label="delete"
+                  //     onClick={() => removeFile(file)}
+                  //   >
+                  //     <Delete />
+                  //   </IconButton>
+                  // }
+                >
+                  <ListItemAvatar>
+                    <Avatar>
+                      <InsertDriveFile />
+                    </Avatar>
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary={file.name}
+                    secondary={`${
+                      file.type != "" ? file.type : "Unknown type"
+                    }, ${fileSize(file.size)}`}
+                  />
+                </ListItem>
+              ))}
+            </List>
+            <Button variant="contained" size="large" onClick={downloadFiles}>
+              Download
+            </Button>
+          </>
+        )}
       </div>
     </>
   );
 };
 
-export default Home;
+export { Home };

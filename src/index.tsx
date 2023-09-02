@@ -7,9 +7,9 @@ import {
   ThemeProvider,
 } from "@mui/material";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
-import Test from "./pages/Test";
-import { createAstralTheme } from "./themes";
-import Home from "./pages/Home";
+import { createAstralTheme } from "./theme";
+import App from "./App";
+import { Home, About, FAQs, Privacy, PaletteTest, Test, ShareRedirector } from "./pages";
 
 const rootElement = document.getElementById("root");
 const root = ReactDOM.createRoot(rootElement as HTMLElement);
@@ -19,7 +19,34 @@ const theme = createAstralTheme(rootElement);
 const defaultRouter = createBrowserRouter([
   {
     path: "/",
-    element: <Home />,
+    element: <App />,
+    // errorElement: <></>,
+    children: [
+      {
+        index: true,
+        element: <Home />,
+      },
+      {
+        path: "about",
+        element: <About />,
+      },
+      {
+        path: "faqs",
+        element: <FAQs />,
+      },
+      {
+        path: "privacy",
+        element: <Privacy />,
+      },
+    ],
+  },
+  {
+    path: "/s/:code",
+    element: <ShareRedirector />
+  },
+  {
+    path: "/palette",
+    element: <PaletteTest />,
   },
   {
     path: "/test",

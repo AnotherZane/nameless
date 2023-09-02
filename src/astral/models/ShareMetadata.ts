@@ -1,6 +1,6 @@
 import IMessagePackable from "../interfaces/IMessagePackable";
 
-class ShareCode implements IMessagePackable {
+class ShareMetadata implements IMessagePackable {
   readonly code: string;
   readonly reconnectToken: string;
 
@@ -15,8 +15,8 @@ class ShareCode implements IMessagePackable {
 
   static fromArray(array: unknown[]) {
     const arr = array as [code: string, reconnectToken: string];
-    return new ShareCode(arr[0], arr[1]);
+    return new ShareMetadata(...arr);
   }
 }
 
-export default ShareCode;
+export { ShareMetadata };
