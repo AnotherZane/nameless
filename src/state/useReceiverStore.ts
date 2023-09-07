@@ -1,12 +1,12 @@
 import { create } from "zustand";
 import { FileMetadata } from "../astral/models";
 
-type ReceiverStore = {
+interface ReceiverStore {
   sharedMetadata: FileMetadata[];
   addMetadata: (...files: FileMetadata[]) => void;
   removeMetadata: (file: FileMetadata) => void;
   clearMetadata: () => void;
-};
+}
 
 const useReceiverStore = create<ReceiverStore>((set, get) => ({
   sharedMetadata: [],

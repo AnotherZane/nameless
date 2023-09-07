@@ -7,7 +7,12 @@ import {
   ListItemText,
 } from "@mui/material";
 import React, { useEffect } from "react";
-import { useHubConnectorStore, useReceiverStore, useSenderStore, useShareStore } from "../state";
+import {
+  useHubConnectorStore,
+  useReceiverStore,
+  useSenderStore,
+  useShareStore,
+} from "../state";
 import { formatShareLink } from "../utils";
 import { FileSelector } from "../components";
 import { ShareRole } from "../astral/enums";
@@ -43,13 +48,13 @@ const Home = () => {
   };
 
   const downloadFiles = async () => {
-    await hub.requestRTC(shareCode!);
+    await hub.requestRTC();
   };
 
   return (
     <>
       <div className="flex flex-col w-fit">
-        {shareRole == ShareRole.Sharer ? (
+        {shareRole == ShareRole.Sender ? (
           <>
             <FileSelector />
             <p

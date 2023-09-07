@@ -1,11 +1,11 @@
 import { create } from "zustand";
 
-type SenderStore = {
+interface SenderStore {
   sharedFiles: File[];
   addFiles: (...files: File[]) => void;
   removeFile: (file: File) => void;
   clearFiles: () => void;
-};
+}
 
 const useSenderStore = create<SenderStore>((set, get) => ({
   sharedFiles: [],

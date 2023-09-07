@@ -1,10 +1,10 @@
 import { create } from "zustand";
 import { HubConnector } from "../astral/connectors";
 
-type HubConnectorStore = {
+interface HubConnectorStore {
   connector: HubConnector;
   connected: boolean;
-};
+}
 
 const useHubConnectorStore = create<HubConnectorStore>(() => ({
   connector: new HubConnector(),

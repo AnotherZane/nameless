@@ -1,14 +1,77 @@
+import { useHubConnectorStore } from "../../state";
+
+const DefaultRTCConfiguration: RTCConfiguration = {
+  iceServers: [
+    { urls: "stun:stun.l.google.com:19302" },
+    { urls: "stun:stun.services.mozilla.com:3478" },
+  ],
+};
+
 class RTCConnector {
   private connection: RTCPeerConnection;
-  private channel: RTCDataChannel;
+  private channel?: RTCDataChannel;
+  private connectionId: string;
+  private remoteDescribed: boolean;
+  private pendingIceCandidates: RTCIceCandidate[];
 
-  constructor(rtcConfig: RTCConfiguration) {
-    this.connection = new RTCPeerConnection(rtcConfig);
+  constructor(
+    connectionId: string,
+    config: RTCConfiguration = DefaultRTCConfiguration
+  ) {
+    this.connection = new RTCPeerConnection(config);
+    this.connectionId = connectionId;
     this.registerConnectionEvents();
+    this.remoteDescribed = false;
+    this.pendingIceCandidates = [];
+  }
 
+  public updateConfig = (config: RTCConfiguration) =>
+    this.connection.setConfiguration(config);
+
+  public createOffer = async () => {
     this.channel = this.connection.createDataChannel("nameless");
     this.registerChannelEvents();
-  }
+
+    const offer = await this.connection.createOffer();
+    await this.connection.setLocalDescription(offer);
+    return offer;
+  };
+
+  public createAnswer = async (offer: RTCSessionDescription) => {
+    await this.connection.setRemoteDescription(offer);
+
+    const answer = await this.connection.createAnswer();
+    await this.connection.setLocalDescription(answer);
+
+    this.remoteDescribed = true;
+    await this.addPendingIceCandidates();
+
+    return answer;
+  };
+
+  public setAnswer = async (answer: RTCSessionDescription) => {
+    await this.connection.setRemoteDescription(answer);
+
+    this.remoteDescribed = true;
+    await this.addPendingIceCandidates();
+  };
+
+  public addIceCandidate = async (candidate: RTCIceCandidate) => {
+    if (this.remoteDescribed) {
+      await this.connection.addIceCandidate(candidate);
+    } else {
+      this.pendingIceCandidates.push(candidate);
+    }
+  };
+
+  private addPendingIceCandidates = async () => {
+    for (let i = 0; i < this.pendingIceCandidates.length; i++) {
+      const candidate = this.pendingIceCandidates[i];
+      await this.connection.addIceCandidate(candidate);
+    }
+
+    this.pendingIceCandidates = [];
+  };
 
   private registerConnectionEvents = () => {
     this.connection.onicecandidate = this.handleIceCandidate;
@@ -16,6 +79,8 @@ class RTCConnector {
   };
 
   private registerChannelEvents = () => {
+    if (!this.channel) return;
+
     this.channel.onopen = this.handleChannelOpen;
     this.channel.onmessage = this.handleChannelMessage;
     this.channel.onclosing = this.handleChannelClosing;
@@ -25,6 +90,7 @@ class RTCConnector {
 
   private handleChannelOpen = (ev: Event) => {
     console.log(ev);
+    this.channel?.send("Data channel opened!");
   };
 
   private handleChannelMessage = (ev: MessageEvent<unknown>) => {
@@ -44,14 +110,19 @@ class RTCConnector {
   };
 
   private handleIceCandidate = (ev: RTCPeerConnectionIceEvent) => {
-    console.log(ev.candidate);
+    console.log("Sending ice candidate:", ev.candidate);
+
+    if (ev.candidate)
+      useHubConnectorStore
+        .getState()
+        .connector.sendIceCandidate(this.connectionId, ev.candidate);
   };
 
   private handleDataChannel = (ev: RTCDataChannelEvent) => {
-    console.log(ev.channel);
+    console.log("Got data channel", ev.channel);
     this.channel = ev.channel;
     this.registerChannelEvents();
   };
 }
 
-export { RTCConnector };
+export { RTCConnector, DefaultRTCConfiguration };

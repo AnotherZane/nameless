@@ -11,8 +11,15 @@ import {
   useSenderStore,
   useShareStore,
 } from "../../state";
-import { FileMetadata, IceServer, ShareMetadata } from "../models";
+import {
+  FileMetadata,
+  IceCandidate,
+  IceServer,
+  SessionDescription,
+  ShareMetadata,
+} from "../models";
 import { AkiviliMethods, NamelessMethods } from "../enums";
+import { DefaultRTCConfiguration, RTCConnector } from "./RTCConnector";
 
 class HubConnector {
   private connection: HubConnection;
@@ -49,14 +56,33 @@ class HubConnector {
   public requestMetadata = async (code: string): Promise<void> =>
     await this.connection.invoke(AkiviliMethods.RequestMetadata, code);
 
-  public requestRTC = async (code: string): Promise<void> =>
-    await this.connection.invoke(AkiviliMethods.RequestRTC, code);
+  public requestRTC = async (): Promise<void> =>
+    await this.connection.invoke(AkiviliMethods.RequestRTC);
+
+  public sendIceCandidate = async (
+    connectionId: string,
+    candidate: RTCIceCandidate
+  ) =>
+    await this.connection.invoke(
+      AkiviliMethods.SendIceCandidate,
+      connectionId,
+      IceCandidate.fromRTCIceCandidate(candidate).serialize()
+    );
 
   private registerHubEvents = () => {
     this.connection.on(NamelessMethods.Log, this.log);
     this.connection.on(NamelessMethods.DataRequested, this.metadataRequested);
-    this.connection.on(NamelessMethods.DataShared, this.metadataShared);
+    this.connection.on(NamelessMethods.DataReceived, this.metadataReceived);
     this.connection.on(NamelessMethods.RTCRequested, this.rtcRequested);
+    this.connection.on(NamelessMethods.RTCOfferReceived, this.rtcOfferReceived);
+    this.connection.on(
+      NamelessMethods.RTCAnswerReceived,
+      this.rtcAnswerReceived
+    );
+    this.connection.on(
+      NamelessMethods.IceCandidateReceived,
+      this.iceCandidateReceived
+    );
 
     this.connection.on(NamelessMethods.Connected, () => {
       useHubConnectorStore.setState({ connected: true });
@@ -75,17 +101,15 @@ class HubConnector {
 
   private metadataRequested = async (requester: string) => {
     const sender = useSenderStore.getState();
-    const share = useShareStore.getState();
 
-    await this.connection.send(
+    await this.connection.invoke(
       AkiviliMethods.SendMetadata,
-      share.code,
       requester,
       sender.sharedFiles.map((f) => FileMetadata.fromFile(f).serialize())
     );
   };
 
-  private metadataShared = async (data: unknown[][]) => {
+  private metadataReceived = async (data: unknown[][]) => {
     useReceiverStore.setState({
       sharedMetadata: data.map((x) => FileMetadata.fromArray(x)),
     });
@@ -93,15 +117,63 @@ class HubConnector {
 
   private rtcRequested = async (requester: string, data: unknown[]) => {
     const turnServer = IceServer.fromArray(data);
-    // IceServer is implicitly converted to RTCIceServer;
-    useRTCStore.getState().addIceServer(turnServer);
-    useRTCStore.getState().createConnection();
-    const conn = useRTCStore.getState().connection!;
+    const newIceServers = DefaultRTCConfiguration.iceServers ?? [];
+    newIceServers.push(turnServer);
 
-    const dc = conn.createDataChannel("nameless");
-    useRTCStore.getState().setChannel(dc);
+    const config: RTCConfiguration = { iceServers: newIceServers };
+    const conn = new RTCConnector(requester, config);
+    useRTCStore.getState().addConnector(requester, conn);
 
-    const offer = await conn.createOffer();
+    console.log("connector created, sending offer");
+
+    const offer = SessionDescription.fromInit(await conn.createOffer());
+    await this.connection.invoke(
+      AkiviliMethods.SendRTCOffer,
+      requester,
+      offer.serialize()
+    );
+  };
+
+  private rtcOfferReceived = async (
+    sender: string,
+    offr: unknown[],
+    turn: unknown[]
+  ) => {
+    const offer = SessionDescription.fromArray(offr);
+    const turnServer = IceServer.fromArray(turn);
+
+    const newIceServers = DefaultRTCConfiguration.iceServers ?? [];
+    newIceServers.push(turnServer);
+
+    const config: RTCConfiguration = { iceServers: newIceServers };
+    const conn = new RTCConnector(sender, config);
+    useRTCStore.getState().addConnector(sender, conn);
+
+    const answer = SessionDescription.fromInit(await conn.createAnswer(offer));
+    await this.connection.invoke(
+      AkiviliMethods.SendRTCAnswer,
+      sender,
+      answer.serialize()
+    );
+  };
+
+  private rtcAnswerReceived = async (sender: string, data: unknown[]) => {
+    const answer = SessionDescription.fromArray(data);
+    const conn = useRTCStore.getState().getConnector(sender);
+
+    // this shouldn't happen
+    if (!conn) return;
+
+    conn.setAnswer(answer);
+  };
+
+  private iceCandidateReceived = async (sender: string, data: unknown[]) => {
+    const candidate = IceCandidate.fromArray(data);
+    const conn = useRTCStore.getState().getConnector(sender);
+
+    if (!conn) return;
+
+    await conn.addIceCandidate(candidate);
   };
 }
 

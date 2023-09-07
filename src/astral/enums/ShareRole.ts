@@ -1,5 +1,5 @@
 enum ShareRole {
-  Sharer = 0,
+  Sender = 0,
   Receiver = 1,
 }
 

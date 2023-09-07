@@ -1,25 +1,29 @@
 import IMessagePackable from "../interfaces/IMessagePackable";
 
 class IceServer implements IMessagePackable {
-  readonly urls: string[];
-  readonly username: string;
-  readonly credentials: string;
-
-  constructor(urls: string[], username: string, credentials: string) {
-    this.urls = urls;
-    this.username = username;
-    this.credentials = credentials;
-  }
+  private constructor(
+    readonly urls: string | string[],
+    readonly username: string,
+    readonly credential: string
+  ) {}
 
   public serialize() {
-    return [this.urls, this.username, this.credentials];
+    return [this.urls, this.username, this.credential];
+  }
+
+  public toRTCIceServer() {
+    return {
+      urls: this.urls,
+      username: this.username,
+      credentials: this.credential,
+    };
   }
 
   static fromArray(array: unknown[]) {
     const arr = array as [
-      urls: string[],
+      urls: string | string[],
       username: string,
-      credentials: string
+      credential: string
     ];
     return new IceServer(...arr);
   }

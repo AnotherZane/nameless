@@ -9,7 +9,15 @@ import {
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { createAstralTheme } from "./theme";
 import App from "./App";
-import { Home, About, FAQs, Privacy, PaletteTest, Test, ShareRedirector } from "./pages";
+import {
+  Home,
+  About,
+  FAQs,
+  Privacy,
+  PaletteTest,
+  Test,
+  ShareRedirector,
+} from "./pages";
 
 const rootElement = document.getElementById("root");
 const root = ReactDOM.createRoot(rootElement as HTMLElement);
@@ -42,7 +50,7 @@ const defaultRouter = createBrowserRouter([
   },
   {
     path: "/s/:code",
-    element: <ShareRedirector />
+    element: <ShareRedirector />,
   },
   {
     path: "/palette",

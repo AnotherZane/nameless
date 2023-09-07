@@ -1,13 +1,7 @@
 import IMessagePackable from "../interfaces/IMessagePackable";
 
 class ShareMetadata implements IMessagePackable {
-  readonly code: string;
-  readonly reconnectToken: string;
-
-  constructor(code: string, reconnectToken: string) {
-    this.code = code;
-    this.reconnectToken = reconnectToken;
-  }
+  private constructor(readonly code: string, readonly reconnectToken: string) {}
 
   public serialize() {
     return [this.code, this.reconnectToken];

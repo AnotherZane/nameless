@@ -2,10 +2,11 @@ enum NamelessMethods {
   Connected = "Connected",
   Log = "Log",
   DataRequested = "DataRequested",
-  DataShared = "DataShared",
+  DataReceived = "DataReceived",
   RTCRequested = "RTCRequested",
-  RTCOfferShared = "RTCOfferShared",
-  RTCAnswerShared = "RTCAnswerShared",
+  RTCOfferReceived = "RTCOfferReceived",
+  RTCAnswerReceived = "RTCAnswerReceived",
+  IceCandidateReceived = "IceCandidateReceived",
 }
 
 export { NamelessMethods };

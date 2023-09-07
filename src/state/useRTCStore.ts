@@ -1,31 +1,30 @@
 import { create } from "zustand";
+import { RTCConnector } from "../astral/connectors";
 
-type RTCStore = {
-  iceServers: RTCIceServer[];
-  addIceServer: (server: RTCIceServer) => void;
-  connection?: RTCPeerConnection;
-  createConnection: () => void;
-  channel?: RTCDataChannel;
-  setChannel: (chan: RTCDataChannel) => void;
-};
+interface RTCStore {
+  connectors: Map<string, RTCConnector>;
+  // createConnector: (id: string, config?: RTCConfiguration) => RTCConnector;
+  addConnector: (id: string, connector: RTCConnector) => void;
+  getConnector: (id: string) => RTCConnector | undefined;
+  removeConnector: (id: string) => RTCConnector | undefined;
+}
 
 const useRTCStore = create<RTCStore>((set, get) => ({
-  iceServers: [
-    { urls: "stun:stun.l.google.com:19302" },
-    { urls: "stun:stun.services.mozilla.com:3478" },
-  ],
-  addIceServer: (server: RTCIceServer) => {
-    const servers = get().iceServers;
-    servers.push(server);
-    set({ iceServers: servers });
+  connectors: new Map<string, RTCConnector>(),
+  addConnector: (id: string, connector: RTCConnector) =>
+    set((s) => ({ connectors: s.connectors.set(id, connector) })),
+  getConnector: (id: string) => get().connectors.get(id),
+  removeConnector: (id: string) => {
+    const connectors = get().connectors;
+    const con = connectors.get(id);
+
+    if (con) {
+      connectors.delete(id);
+      set({ connectors: connectors });
+    }
+
+    return con;
   },
-  createConnection: () =>
-    set({
-      connection: new RTCPeerConnection({
-        iceServers: get().iceServers,
-      }),
-    }),
-  setChannel: (chan: RTCDataChannel) => set({ channel: chan }),
 }));
 
 export { useRTCStore };

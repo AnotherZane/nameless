@@ -1,22 +1,12 @@
 import IMessagePackable from "../interfaces/IMessagePackable";
 
 class FileMetadata implements IMessagePackable {
-  readonly name: string;
-  readonly size: number;
-  readonly type: string;
-  readonly path?: string;
-
   constructor(
-    name: string,
-    size: number,
-    type: string,
-    path: string | undefined = undefined
-  ) {
-    this.name = name;
-    this.size = size;
-    this.type = type;
-    this.path = path;
-  }
+    readonly name: string,
+    readonly size: number,
+    readonly type: string,
+    readonly path?: string
+  ) {}
 
   public serialize() {
     return [this.name, this.size, this.type, this.path];
