@@ -89,19 +89,19 @@ class TrailblazeClient {
       return;
     }
 
-    const ar = Array.from(Array(meta.chunk_count).keys());
+    // const ar = Array.from(Array(meta.chunk_count).keys());
 
-    for (let i = 0; i < arr.length; i++) {
-      const v = arr[i];
-      if (v) {
-        const index = ar.indexOf(i);
-        if (index !== -1) {
-          ar.splice(index, 1);
-        }
-      }
-    }
+    // for (let i = 0; i < arr.length; i++) {
+    //   const v = arr[i];
+    //   if (v) {
+    //     const index = ar.indexOf(i);
+    //     if (index !== -1) {
+    //       ar.splice(index, 1);
+    //     }
+    //   }
+    // }
 
-    console.log(ar);
+    // console.log(ar);
 
     // if (ar.length > 0) {
     //   const msg = new FileChunkRequestTrailblazeMessage(id, ar);

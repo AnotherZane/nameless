@@ -18,7 +18,7 @@ class HandshakeTrailblazeMessage implements ITrailblazeMessage {
 
   static fromArray(array: Uint8Array) {
     const type = array[0] as TrailblazeMessageType;
-    const size = new Uint32Array(array.slice(1))[0];
+    const size = new Uint32Array(array.slice(1).buffer)[0];
 
     return new HandshakeTrailblazeMessage(type, size);
   }

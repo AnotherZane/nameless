@@ -11,7 +11,7 @@ class FileMetadata implements IMessagePackable {
     readonly path?: string
   ) {
     // 65527 = 65536 - 9 bytes, chunk metadata size
-    this.chunk_count = Math.ceil(size / 65527);
+    this.chunk_count = 0 //Math.ceil(size / 65527);
   }
 
   public serialize() {

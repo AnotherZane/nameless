@@ -1,4 +1,8 @@
-import { useConnectorStore, useTrailblazeStore } from "../../state";
+import {
+  useConnectorStore,
+  useShareStore,
+  useTrailblazeStore,
+} from "../../state";
 import { ITrailblazeMessage } from "../interfaces";
 import {
   FilesRequestTrailblazeMessage,
@@ -6,7 +10,7 @@ import {
   FileChunksEndTrailblazeMessage,
   HandshakeTrailblazeMessage,
 } from "../models/trailblaze";
-import { TrailblazeMessageType } from "../enums";
+import { ShareRole, TrailblazeMessageType } from "../enums";
 
 const DefaultRTCConfiguration: RTCConfiguration = {
   iceServers: [
@@ -15,6 +19,8 @@ const DefaultRTCConfiguration: RTCConfiguration = {
   ],
 };
 
+const MAX_CHUNK_SIZE = 262144;
+
 class RTCConnector {
   private connection: RTCPeerConnection;
   private channel?: RTCDataChannel;
@@ -22,11 +28,11 @@ class RTCConnector {
   private remoteDescribed: boolean;
   private pendingIceCandidates: RTCIceCandidate[];
   private queue: ITrailblazeMessage[];
-  private maxMessageSize = 65536; // default, 64 kb
-  private fileDataSize = 65527;
-  private lowWaterMark = this.maxMessageSize; // A single chunk
-  private highWaterMark = this.maxMessageSize * 8; //, 1048576);
-  private timeoutHandle: number | null = null;
+  private maxMessageSize: number;
+  private fileDataSize: number;
+  private lowWaterMark: number;
+  private highWaterMark: number;
+  private timeoutHandle: number | null;
 
   constructor(
     connectionId: string,
@@ -38,6 +44,11 @@ class RTCConnector {
     this.remoteDescribed = false;
     this.pendingIceCandidates = [];
     this.queue = [];
+    this.maxMessageSize = 65536; // default, 64 kb
+    this.fileDataSize = this.maxMessageSize - 9;
+    this.lowWaterMark = this.maxMessageSize;
+    this.highWaterMark = Math.min(this.maxMessageSize * 8, 1048576);
+    this.timeoutHandle = null;
   }
 
   public updateConfig = (config: RTCConfiguration) =>
@@ -48,6 +59,7 @@ class RTCConnector {
       ordered: true,
     });
     this.channel.binaryType = "arraybuffer";
+    this.channel.bufferedAmountLowThreshold = 65536;
     this.registerChannelEvents();
 
     const offer = await this.connection.createOffer();
@@ -88,8 +100,16 @@ class RTCConnector {
   };
 
   public sendFile = async (id: number, file: File) => {
-    const fileChunks = Math.ceil(file.size / 65527);
+    if (!this.channel) throw new Error("RTC Data Channel is undefined.");
+
+    const fileChunks = Math.ceil(file.size / this.fileDataSize);
     let chunk = 0;
+
+    const listener = async (e: any) => {
+      console.log("Chunks:", chunk);
+      console.log("BufferedAmountLow event:", e);
+      await _internalSendFile();
+    };
 
     const _internalSendFile = async () => {
       if (!this.channel) throw new Error("RTC Data Channel is undefined.");
@@ -113,19 +133,20 @@ class RTCConnector {
         const bytes = new Uint8Array(fileData);
 
         const msg = new FileChunkTrailblazeMessage(id, chunk, bytes);
-
-        this.channel.send(msg.serialize());
+        const msgBytes = msg.serialize();
+        this.channel.send(msgBytes);
 
         chunk += 1;
-        bufferedAmount += this.maxMessageSize;
+        bufferedAmount += msgBytes.length;
+        // console.log(bufferedAmount, this.channel.bufferedAmount);
 
         // Pause sending if we reach the high water mark
         if (bufferedAmount >= this.highWaterMark) {
           // This is a workaround due to the bug that all browsers are incorrectly calculating the
           // amount of buffered data. Therefore, the 'bufferedamountlow' event would not fire.
-          if (this.channel.bufferedAmount < this.lowWaterMark) {
+          if (this.channel.bufferedAmount <= this.lowWaterMark) {
             this.timeoutHandle = window.setTimeout(
-              () => this._internalSend(),
+              async () => await _internalSendFile(),
               0
             );
           }
@@ -135,8 +156,15 @@ class RTCConnector {
           break;
         }
       }
+
+      if (chunk == fileChunks) {
+        this.channel.removeEventListener("bufferedamountlow", listener);
+        const msg = new FileChunksEndTrailblazeMessage(id);
+        this.channel.send(msg.serialize());
+      }
     };
 
+    this.channel.addEventListener("bufferedamountlow", listener);
     await _internalSendFile();
   };
 
@@ -165,7 +193,11 @@ class RTCConnector {
         // This is a workaround due to the bug that all browsers are incorrectly calculating the
         // amount of buffered data. Therefore, the 'bufferedamountlow' event would not fire.
         if (this.channel.bufferedAmount < this.lowWaterMark) {
-          this.timeoutHandle = window.setTimeout(() => this._internalSend(), 0);
+          console.log("AA");
+          this.timeoutHandle = window.setTimeout(
+            async () => await this._internalSend(),
+            0
+          );
         }
         console.log(
           `Paused sending, buffered amount: ${bufferedAmount} (announced: ${this.channel.bufferedAmount})`
@@ -173,28 +205,6 @@ class RTCConnector {
         break;
       }
     }
-
-    // const send = () => {
-    //   if (!this.channel) throw new Error("RTC Data Channel is undefined.");
-    //   console.log(
-    //     this.channel.bufferedAmount,
-    //     this.channel.bufferedAmountLowThreshold
-    //   );
-
-    //   if (
-    //     this.channel.bufferedAmount > this.channel.bufferedAmountLowThreshold
-    //   ) {
-    //     // Wait for the buffer to have space before adding more data
-    //     this.channel.onbufferedamountlow = () => {
-    //       this.channel!.onbufferedamountlow = null;
-    //       console.log("Trying to send again");
-    //       send();
-    //     };
-    //     return;
-    //   }
-
-    // this.channel.send(msg.serialize());
-    // };
   };
 
   private addPendingIceCandidates = async () => {
@@ -221,31 +231,18 @@ class RTCConnector {
     this.channel.onerror = this.handleChannelError;
   };
 
-  private handleChannelOpen = (ev: Event) => {
-    // const trailblaze = useTrailblazeStore.getState().client;
-    // trailblaze.onConnected(this);
-
-    const maxMessageSize =
-      this.connection.sctp?.maxMessageSize ?? this.maxMessageSize;
-    const msg = new HandshakeTrailblazeMessage(
-      TrailblazeMessageType.PING,
-      maxMessageSize
-    );
-    this.channel?.send(msg.serialize());
-
-    // if (useShareStore.getState().role == ShareRole.Sender) {
-    //   const files = useSenderStore.getState().sharedFiles;
-
-    //   for (const file of files) {
-    //     const dat = await file.arrayBuffer();
-    //     const msg = encode({
-    //       name: file.name,
-    //       data: new Uint8Array(dat),
-    //     });
-    //     console.log(msg);
-    //     this.channel?.send(msg);
-    //   }
-    // }
+  private handleChannelOpen = () => {
+    if (useShareStore.getState().role == ShareRole.Receiver) {
+      const maxMessageSize = Math.min(
+        this.connection.sctp?.maxMessageSize ?? this.maxMessageSize,
+        MAX_CHUNK_SIZE
+      );
+      const msg = new HandshakeTrailblazeMessage(
+        TrailblazeMessageType.PING,
+        maxMessageSize
+      );
+      this.channel?.send(msg.serialize());
+    }
   };
 
   private handleChannelMessage = async (ev: MessageEvent<ArrayBuffer>) => {
@@ -262,15 +259,20 @@ class RTCConnector {
       case TrailblazeMessageType.PING: {
         const ping = HandshakeTrailblazeMessage.fromArray(data);
 
-        let messageSize =
-          this.connection.sctp?.maxMessageSize ?? this.maxMessageSize;
+        let messageSize = Math.min(
+          this.connection.sctp?.maxMessageSize ?? this.maxMessageSize,
+          MAX_CHUNK_SIZE
+        );
 
         if (messageSize > ping.size) messageSize = ping.size;
 
         this.maxMessageSize = messageSize;
         this.fileDataSize = messageSize - 9; // 9 = metadata size
         this.lowWaterMark = messageSize;
-        this.highWaterMark = Math.min(messageSize * 8, 1048576);
+        this.highWaterMark = Math.max(messageSize * 8, 1048576);
+        this.channel!.bufferedAmountLowThreshold = this.lowWaterMark;
+
+        console.log(this.channel!.bufferedAmountLowThreshold);
 
         const msg = new HandshakeTrailblazeMessage(
           TrailblazeMessageType.PONG,
@@ -284,7 +286,8 @@ class RTCConnector {
         this.maxMessageSize = pong.size;
         this.fileDataSize = pong.size - 9; // 9 = metadata size
         this.lowWaterMark = pong.size;
-        this.highWaterMark = Math.min(pong.size * 8, 1048576);
+        this.highWaterMark = Math.max(pong.size * 8, 1048576);
+        this.channel!.bufferedAmountLowThreshold = this.lowWaterMark;
 
         const trailblaze = useTrailblazeStore.getState().client;
         trailblaze.onReady(this);
@@ -307,25 +310,6 @@ class RTCConnector {
         break;
       }
     }
-
-    // WORK ON CHUNKING, ENCODING, DECODING VIA WORKERS
-
-    // if (useShareStore.getState().role == ShareRole.Receiver) {
-    //   const msg = decode(ev.data as Uint8Array) as {
-    //     name: string;
-    //     data: ArrayBuffer;
-    //   };
-    //   console.log(msg.data);
-    //   const file = new File([msg.data], msg.name);
-    //   const url = window.URL.createObjectURL(file);
-    //   const a = document.createElement("a");
-    //   a.style.display = "none";
-    //   a.href = url;
-    //   a.download = msg.name;
-    //   document.body.appendChild(a);
-    //   a.click();
-    //   window.URL.revokeObjectURL(url);
-    // }
   };
 
   private handleChannelClosing = (ev: Event) => {
@@ -353,6 +337,7 @@ class RTCConnector {
   private handleDataChannel = (ev: RTCDataChannelEvent) => {
     this.channel = ev.channel;
     this.channel.binaryType = "arraybuffer";
+    this.channel.bufferedAmountLowThreshold = 65536;
     this.registerChannelEvents();
   };
 }

@@ -8,14 +8,11 @@ class FileChunkTrailblazeMessage implements ITrailblazeMessage {
     readonly id: number,
     readonly chunk: number,
     readonly data: Uint8Array
-  ) {
-    if (data.byteLength > 65527)
-      throw new Error("Data byte length exceeds max chunk size");
-  }
+  ) {}
 
   public serialize() {
     const meta = new Uint32Array([this.id, this.chunk]);
-    const array = new Uint8Array(1 + 8 + 65527);
+    const array = new Uint8Array(1 + 8 + this.data.buffer.byteLength);
 
     array.set(new Uint8Array([this.type]), 0);
     array.set(new Uint8Array(meta.buffer), 1);
