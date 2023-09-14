@@ -6,6 +6,9 @@ interface ReceiverStore {
   addMetadata: (...files: FileMetadata[]) => void;
   removeMetadata: (file: FileMetadata) => void;
   clearMetadata: () => void;
+  tempDls: Map<number, Uint8Array[]>;
+  appendDl: (id: number, idx: number, arr: Uint8Array) => void;
+  removeDl: (id: number) => void;
 }
 
 const useReceiverStore = create<ReceiverStore>((set, get) => ({
@@ -26,6 +29,19 @@ const useReceiverStore = create<ReceiverStore>((set, get) => ({
     set({ sharedMetadata: shared });
   },
   clearMetadata: () => set({ sharedMetadata: [] }),
+  tempDls: new Map<number, Uint8Array[]>(),
+  appendDl: (id: number, idx: number, arr: Uint8Array) => {
+    const dls = get().tempDls;
+    const curr = dls.get(id) ?? [];
+    curr[idx] = arr;
+    dls.set(id, curr);
+    set({ tempDls: dls });
+  },
+  removeDl: (id: number) => {
+    const dls = get().tempDls;
+    dls.delete(id);
+    set({ tempDls: dls });
+  },
 }));
 
 export { useReceiverStore };

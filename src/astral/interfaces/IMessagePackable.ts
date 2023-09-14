@@ -2,4 +2,4 @@ interface IMessagePackable {
   serialize: () => any[];
 }
 
-export default IMessagePackable;
+export type { IMessagePackable };

@@ -1,4 +1,4 @@
-import IMessagePackable from "../interfaces/IMessagePackable";
+import {IMessagePackable} from "../interfaces";
 
 class IceCandidate implements RTCIceCandidate, IMessagePackable {
   constructor(

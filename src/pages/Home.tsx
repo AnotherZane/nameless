@@ -8,7 +8,7 @@ import {
 } from "@mui/material";
 import React, { useEffect } from "react";
 import {
-  useHubConnectorStore,
+  useConnectorStore,
   useReceiverStore,
   useSenderStore,
   useShareStore,
@@ -20,8 +20,8 @@ import { InsertDriveFile } from "@mui/icons-material";
 import { fileSize } from "humanize-plus";
 
 const Home = () => {
-  const hub = useHubConnectorStore((s) => s.connector);
-  const hubConnected = useHubConnectorStore((s) => s.connected);
+  const hub = useConnectorStore((s) => s.hub);
+  const hubConnected = useConnectorStore((s) => s.hubConnected);
 
   const shareRole = useShareStore((s) => s.role);
   const shareCode = useShareStore((s) => s.code);
@@ -41,7 +41,7 @@ const Home = () => {
   }, [hubConnected]);
 
   const shareFiles = async () => {
-    if (sharedFiles.length < 1) return;
+    if (sharedFiles.size < 1) return;
 
     await hub.start();
     await hub.createShare();
@@ -105,7 +105,12 @@ const Home = () => {
                 </ListItem>
               ))}
             </List>
-            <Button variant="contained" size="large" onClick={downloadFiles}>
+            <Button
+              variant="contained"
+              size="large"
+              onClick={downloadFiles}
+              disabled={sharedFileMetadata.length < 1}
+            >
               Download
             </Button>
           </>

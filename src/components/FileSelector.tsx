@@ -16,12 +16,9 @@ const FileSelector = () => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dirCheck, setDirCheck] = useState<boolean>(false);
 
-  const [sharedFiles, addFiles, removeFile, clearFiles] = useSenderStore((s) => [
-    s.sharedFiles,
-    s.addFiles,
-    s.removeFile,
-    s.clearFiles,
-  ]);
+  const [sharedFiles, addFiles, removeFile, clearFiles] = useSenderStore(
+    (s) => [s.sharedFiles, s.addFiles, s.removeFile, s.clearFiles]
+  );
 
   useEffect(() => {
     if (!inputRef.current) return;
@@ -45,15 +42,15 @@ const FileSelector = () => {
   return (
     <>
       <List dense>
-        {sharedFiles.map((file, idx) => (
+        {Array.from(sharedFiles.entries()).map(([id, file]) => (
           <ListItem
-            key={idx}
+            key={id}
             secondaryAction={
               <IconButton
                 edge="end"
                 size="small"
                 aria-label="delete"
-                onClick={() => removeFile(file)}
+                onClick={() => removeFile(id)}
               >
                 <Delete />
               </IconButton>

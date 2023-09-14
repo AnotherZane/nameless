@@ -5,8 +5,7 @@ import {
 } from "@microsoft/signalr";
 import { MessagePackHubProtocol } from "@microsoft/signalr-protocol-msgpack";
 import {
-  useHubConnectorStore,
-  useRTCStore,
+  useConnectorStore,
   useReceiverStore,
   useSenderStore,
   useShareStore,
@@ -85,15 +84,15 @@ class HubConnector {
     );
 
     this.connection.on(NamelessMethods.Connected, () => {
-      useHubConnectorStore.setState({ connected: true });
+      useConnectorStore.setState({ hubConnected: true });
     });
 
     this.connection.onreconnected(() => {
-      useHubConnectorStore.setState({ connected: true });
+      useConnectorStore.setState({ hubConnected: true });
     });
 
     this.connection.onclose(() => {
-      useHubConnectorStore.setState({ connected: false });
+      useConnectorStore.setState({ hubConnected: false });
     });
   };
 
@@ -105,7 +104,9 @@ class HubConnector {
     await this.connection.invoke(
       AkiviliMethods.SendMetadata,
       requester,
-      sender.sharedFiles.map((f) => FileMetadata.fromFile(f).serialize())
+      Array.from(sender.sharedFiles.entries()).map(([id, file]) =>
+        FileMetadata.fromFile(id, file).serialize()
+      )
     );
   };
 
@@ -122,9 +123,7 @@ class HubConnector {
 
     const config: RTCConfiguration = { iceServers: newIceServers };
     const conn = new RTCConnector(requester, config);
-    useRTCStore.getState().addConnector(requester, conn);
-
-    console.log("connector created, sending offer");
+    useConnectorStore.getState().addRTC(requester, conn);
 
     const offer = SessionDescription.fromInit(await conn.createOffer());
     await this.connection.invoke(
@@ -147,7 +146,7 @@ class HubConnector {
 
     const config: RTCConfiguration = { iceServers: newIceServers };
     const conn = new RTCConnector(sender, config);
-    useRTCStore.getState().addConnector(sender, conn);
+    useConnectorStore.getState().addRTC(sender, conn);
 
     const answer = SessionDescription.fromInit(await conn.createAnswer(offer));
     await this.connection.invoke(
@@ -159,7 +158,7 @@ class HubConnector {
 
   private rtcAnswerReceived = async (sender: string, data: unknown[]) => {
     const answer = SessionDescription.fromArray(data);
-    const conn = useRTCStore.getState().getConnector(sender);
+    const conn = useConnectorStore.getState().getRTC(sender);
 
     // this shouldn't happen
     if (!conn) return;
@@ -169,7 +168,7 @@ class HubConnector {
 
   private iceCandidateReceived = async (sender: string, data: unknown[]) => {
     const candidate = IceCandidate.fromArray(data);
-    const conn = useRTCStore.getState().getConnector(sender);
+    const conn = useConnectorStore.getState().getRTC(sender);
 
     if (!conn) return;
 

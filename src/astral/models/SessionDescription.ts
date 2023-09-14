@@ -1,4 +1,4 @@
-import IMessagePackable from "../interfaces/IMessagePackable";
+import {IMessagePackable} from "../interfaces";
 
 class SessionDescription implements RTCSessionDescription, IMessagePackable {
   private constructor(readonly sdp: string, readonly type: RTCSdpType) {}

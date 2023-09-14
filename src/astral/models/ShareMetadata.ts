@@ -1,4 +1,4 @@
-import IMessagePackable from "../interfaces/IMessagePackable";
+import { IMessagePackable } from "../interfaces";
 
 class ShareMetadata implements IMessagePackable {
   private constructor(readonly code: string, readonly reconnectToken: string) {}

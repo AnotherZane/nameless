@@ -1,9 +1,8 @@
-import React, { useContext } from "react";
+import React from "react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@mui/material";
-import { HubConnector } from "../astral/connectors";
 import { useNavigate } from "react-router-dom";
-import { useHubConnectorStore } from "../state";
+import { useConnectorStore } from "../state";
 
 declare global {
   interface Window {
@@ -41,7 +40,7 @@ const webRTCConfig = {
 const Test = () => {
   // const [connection, setConnection] = useState<HubConnection>();
   // const [connector, setConnector] = useState<HubConnector>();
-  const connector = useHubConnectorStore((s) => s.connector);
+  const connector = useConnectorStore((s) => s.hub);
 
   const navigate = useNavigate();
 

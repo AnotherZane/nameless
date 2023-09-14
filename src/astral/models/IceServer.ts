@@ -1,4 +1,4 @@
-import IMessagePackable from "../interfaces/IMessagePackable";
+import {IMessagePackable} from "../interfaces";
 
 class IceServer implements IMessagePackable {
   private constructor(
