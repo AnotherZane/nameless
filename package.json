@@ -23,8 +23,10 @@
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.14.2",
     "react-scripts": "5.0.1",
+    "streamsaver": "^2.0.6",
     "typescript": "^4.9.5",
     "usehooks-ts": "^2.9.1",
+    "web-streams-polyfill": "^3.2.1",
     "web-vitals": "^2.1.4",
     "zustand": "^4.4.1"
   },
@@ -48,6 +50,7 @@
   },
   "devDependencies": {
     "@types/humanize-plus": "^1.8.0",
+    "@types/streamsaver": "^2.0.1",
     "eslint": "^8.46.0",
     "tailwindcss": "^3.3.3"
   }

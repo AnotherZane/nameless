@@ -35,6 +35,10 @@ const defaultRouter = createBrowserRouter([
         element: <Home />,
       },
       {
+        path: "receive",
+        element: <></>
+      },
+      {
         path: "about",
         element: <About />,
       },

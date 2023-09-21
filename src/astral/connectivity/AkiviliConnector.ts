@@ -5,7 +5,7 @@ import {
 } from "@microsoft/signalr";
 import { MessagePackHubProtocol } from "@microsoft/signalr-protocol-msgpack";
 import {
-  useConnectorStore,
+  useConnectivityStore,
   useReceiverStore,
   useSenderStore,
   useShareStore,
@@ -18,9 +18,9 @@ import {
   ShareMetadata,
 } from "../models";
 import { AkiviliMethods, NamelessMethods } from "../enums";
-import { DefaultRTCConfiguration, RTCConnector } from "./RTCConnector";
+import { Trailblazer } from "./Trailblazer";
 
-class HubConnector {
+class AkiviliConnector {
   private connection: HubConnection;
 
   constructor() {
@@ -84,15 +84,15 @@ class HubConnector {
     );
 
     this.connection.on(NamelessMethods.Connected, () => {
-      useConnectorStore.setState({ hubConnected: true });
+      useConnectivityStore.setState({ pathConnected: true });
     });
 
     this.connection.onreconnected(() => {
-      useConnectorStore.setState({ hubConnected: true });
+      useConnectivityStore.setState({ pathConnected: true });
     });
 
     this.connection.onclose(() => {
-      useConnectorStore.setState({ hubConnected: false });
+      useConnectivityStore.setState({ pathConnected: false });
     });
   };
 
@@ -118,12 +118,8 @@ class HubConnector {
 
   private rtcRequested = async (requester: string, data: unknown[]) => {
     const turnServer = IceServer.fromArray(data);
-    const newIceServers = DefaultRTCConfiguration.iceServers ?? [];
-    newIceServers.push(turnServer);
-
-    const config: RTCConfiguration = { iceServers: newIceServers };
-    const conn = new RTCConnector(requester, config);
-    useConnectorStore.getState().addRTC(requester, conn);
+    const conn = new Trailblazer(requester, [turnServer]);
+    useConnectivityStore.getState().addNameless(requester, conn);
 
     const offer = SessionDescription.fromInit(await conn.createOffer());
     await this.connection.invoke(
@@ -140,13 +136,8 @@ class HubConnector {
   ) => {
     const offer = SessionDescription.fromArray(offr);
     const turnServer = IceServer.fromArray(turn);
-
-    const newIceServers = DefaultRTCConfiguration.iceServers ?? [];
-    newIceServers.push(turnServer);
-
-    const config: RTCConfiguration = { iceServers: newIceServers };
-    const conn = new RTCConnector(sender, config);
-    useConnectorStore.getState().addRTC(sender, conn);
+    const conn = new Trailblazer(sender, [turnServer]);
+    useConnectivityStore.getState().addNameless(sender, conn);
 
     const answer = SessionDescription.fromInit(await conn.createAnswer(offer));
     await this.connection.invoke(
@@ -158,7 +149,7 @@ class HubConnector {
 
   private rtcAnswerReceived = async (sender: string, data: unknown[]) => {
     const answer = SessionDescription.fromArray(data);
-    const conn = useConnectorStore.getState().getRTC(sender);
+    const conn = useConnectivityStore.getState().getNameless(sender);
 
     // this shouldn't happen
     if (!conn) return;
@@ -168,7 +159,7 @@ class HubConnector {
 
   private iceCandidateReceived = async (sender: string, data: unknown[]) => {
     const candidate = IceCandidate.fromArray(data);
-    const conn = useConnectorStore.getState().getRTC(sender);
+    const conn = useConnectivityStore.getState().getNameless(sender);
 
     if (!conn) return;
 
@@ -176,4 +167,4 @@ class HubConnector {
   };
 }
 
-export { HubConnector };
+export { AkiviliConnector };

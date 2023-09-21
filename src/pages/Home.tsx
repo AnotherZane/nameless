@@ -8,7 +8,7 @@ import {
 } from "@mui/material";
 import React, { useEffect } from "react";
 import {
-  useConnectorStore,
+  useConnectivityStore,
   useReceiverStore,
   useSenderStore,
   useShareStore,
@@ -20,8 +20,8 @@ import { InsertDriveFile } from "@mui/icons-material";
 import { fileSize } from "humanize-plus";
 
 const Home = () => {
-  const hub = useConnectorStore((s) => s.hub);
-  const hubConnected = useConnectorStore((s) => s.hubConnected);
+  const hub = useConnectivityStore((s) => s.akivili);
+  const hubConnected = useConnectivityStore((s) => s.pathConnected);
 
   const shareRole = useShareStore((s) => s.role);
   const shareCode = useShareStore((s) => s.code);

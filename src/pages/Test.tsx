@@ -2,7 +2,7 @@ import React from "react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { useConnectorStore } from "../state";
+import { useConnectivityStore } from "../state";
 
 declare global {
   interface Window {
@@ -39,8 +39,8 @@ const webRTCConfig = {
 
 const Test = () => {
   // const [connection, setConnection] = useState<HubConnection>();
-  // const [connector, setConnector] = useState<HubConnector>();
-  const connector = useConnectorStore((s) => s.hub);
+  // const [connector, setConnector] = useState<AkiviliConnector>();
+  const connector = useConnectivityStore((s) => s.akivili);
 
   const navigate = useNavigate();
 
@@ -53,7 +53,7 @@ const Test = () => {
   const [dirCheck, setDirCheck] = useState<boolean>(false);
 
   useEffect(() => {
-    // setConnector(new HubConnector());
+    // setConnector(new AkiviliConnector());
 
     const peerConn = new RTCPeerConnection(webRTCConfig);
     setPeerConnection(peerConn);

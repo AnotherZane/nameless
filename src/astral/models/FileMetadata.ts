@@ -1,18 +1,13 @@
 import { IMessagePackable } from "../interfaces";
 
 class FileMetadata implements IMessagePackable {
-  readonly chunk_count: number;
-
   constructor(
     readonly id: number,
     readonly name: string,
     readonly size: number,
     readonly type: string,
     readonly path?: string
-  ) {
-    // 65527 = 65536 - 9 bytes, chunk metadata size
-    this.chunk_count = 0 //Math.ceil(size / 65527);
-  }
+  ) {}
 
   public serialize() {
     return [this.id, this.name, this.size, this.type, this.path];
