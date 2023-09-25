@@ -1,13 +1,13 @@
 /** @type {import('tailwindcss').Config} */
-import { alpha } from '@mui/material';
+import { alpha } from "@mui/material";
 
 const primary = "#e6cca3";
 const accent = "#9798E6";
 
 module.exports = {
   content: ["./src/**/*.{js,jsx,ts,tsx}"],
-  important: '#root',
-  darkMode: 'class',
+  important: "#root",
+  darkMode: "class",
   theme: {
     extend: {
       colors: {
@@ -25,20 +25,20 @@ module.exports = {
         },
         secondary: {
           light: "#e9e9e9",
-          dark: "#1d1d1d"
+          dark: "#1d1d1d",
         },
         txt: {
           light: "#fefdfb",
-          dark: "#121212"
+          dark: "#121212",
         },
         paper: {
           light: "#fefdfb",
-          dark: "#121212"
-        }
-      }
+          dark: "#121212",
+        },
+      },
     },
     fontFamily: {
-      sans: ['DIN', 'Helvetica', 'sans-serif'],
+      sans: ["DIN", "Helvetica", "sans-serif"],
     },
   },
   plugins: [],

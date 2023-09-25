@@ -1,13 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import "./styles/index.css";
-import {
-  CssBaseline,
-  StyledEngineProvider,
-  ThemeProvider,
-} from "@mui/material";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
-import { createAstralTheme } from "./theme";
 import App from "./App";
 import {
   Home,
@@ -17,12 +11,18 @@ import {
   PaletteTest,
   Test,
   ShareRedirector,
+  ComponentTest,
 } from "./pages";
+import {
+  CssBaseline,
+  StyledEngineProvider,
+  ThemeProvider,
+} from "@mui/material";
+import { useThemeStore } from "./state";
+import { createAstralTheme } from "./theme";
 
 const rootElement = document.getElementById("root");
 const root = ReactDOM.createRoot(rootElement as HTMLElement);
-
-const theme = createAstralTheme(rootElement);
 
 const defaultRouter = createBrowserRouter([
   {
@@ -34,10 +34,10 @@ const defaultRouter = createBrowserRouter([
         index: true,
         element: <Home />,
       },
-      {
-        path: "receive",
-        element: <></>
-      },
+      // {
+      //   path: "receive",
+      //   element: <></>,
+      // },
       {
         path: "about",
         element: <About />,
@@ -49,6 +49,10 @@ const defaultRouter = createBrowserRouter([
       {
         path: "privacy",
         element: <Privacy />,
+      },
+      {
+        path: "component",
+        element: <ComponentTest />,
       },
     ],
   },
@@ -66,13 +70,26 @@ const defaultRouter = createBrowserRouter([
   },
 ]);
 
+type ThemeWrapperProps = {
+  root: HTMLElement | null;
+};
+
+const ThemeWrapper = ({ root }: ThemeWrapperProps) => {
+  const themeSelection = useThemeStore((s) => s.theme);
+  const theme = createAstralTheme(root, themeSelection == "dark");
+
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <RouterProvider router={defaultRouter} />
+    </ThemeProvider>
+  );
+};
+
 root.render(
   <React.StrictMode>
     <StyledEngineProvider injectFirst>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <RouterProvider router={defaultRouter} />
-      </ThemeProvider>
+      <ThemeWrapper root={rootElement} />
     </StyledEngineProvider>
   </React.StrictMode>
 );

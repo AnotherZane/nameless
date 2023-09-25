@@ -247,11 +247,6 @@ class Trailblazer {
 
     this.channel.addEventListener("bufferedamountlow", listener);
     await _internalSendFile();
-
-    // if (this.requestedFiles.length > 0) {
-    //   this.currentFileId = this.requestedFiles.shift()!;
-    //   this.sendFile(this.currentFileId);
-    // }
   };
 
   private addPendingIceCandidates = async () => {
@@ -388,12 +383,7 @@ class Trailblazer {
 
         this.lastChunkReceived += 1;
 
-        // const writer = useReceiverStore
-        //   .getState()
-        //   .getOrCreateWriter(this.currentFileId);
-
         console.log("Writing", this.lastChunkReceived);
-
         this.writer!.write(chunkMsg.data);
         break;
       }
@@ -401,7 +391,6 @@ class Trailblazer {
         const id = FileTrailblazeMessage.fromArray(data).id;
 
         console.log("Ended: " + id);
-        // const writer = useReceiverStore.getState().getOrCreateWriter(id);
         this.writer!.close();
 
         const ack = new FileTrailblazeMessage(

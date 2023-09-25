@@ -7,6 +7,7 @@ import {
   ListItem,
   ListItemAvatar,
   ListItemText,
+  Paper,
 } from "@mui/material";
 import { Delete, InsertDriveFile } from "@mui/icons-material";
 import { fileSize } from "humanize-plus";
@@ -40,37 +41,55 @@ const FileSelector = () => {
   };
 
   return (
-    <>
-      <List dense>
-        {Array.from(sharedFiles.entries()).map(([id, file]) => (
-          <ListItem
-            key={id}
-            secondaryAction={
-              <IconButton
-                edge="end"
-                size="small"
-                aria-label="delete"
-                onClick={() => removeFile(id)}
-              >
-                <Delete />
-              </IconButton>
-            }
-          >
-            <ListItemAvatar>
-              <Avatar>
-                <InsertDriveFile />
-              </Avatar>
-            </ListItemAvatar>
-            <ListItemText
-              primary={file.name}
-              secondary={`${
-                file.type != "" ? file.type : "Unknown type"
-              }, ${fileSize(file.size)}`}
-            />
-          </ListItem>
-        ))}
-      </List>
-
+    <Paper
+      elevation={4}
+      className="flex flex-col place-items-center max-w-fit p-4"
+    >
+      {sharedFiles.size > 0 && (
+        <Paper elevation={1}>
+          <List dense>
+            {Array.from(sharedFiles.entries())
+              .sort((a, b) => a[1].size - b[1].size)
+              .map(([id, file]) => (
+                <ListItem
+                  key={id}
+                  secondaryAction={
+                    <IconButton
+                      edge="end"
+                      size="small"
+                      aria-label="delete"
+                      onClick={() => removeFile(id)}
+                    >
+                      <Delete />
+                    </IconButton>
+                  }
+                >
+                  <ListItemAvatar>
+                    <Avatar>
+                      <InsertDriveFile />
+                    </Avatar>
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary={
+                      file.name.length <= 24
+                        ? file.name
+                        : file.name.substring(0, 12) +
+                          "..." +
+                          file.name.substring(file.name.length - 12)
+                    }
+                    secondary={`${
+                      file.type != ""
+                        ? file.type.length < 24
+                          ? file.type
+                          : file.type.substring(0, 21) + "..."
+                        : "Unknown type"
+                    }, ${fileSize(file.size)}`}
+                  />
+                </ListItem>
+              ))}
+          </List>
+        </Paper>
+      )}
       <span>
         <input
           type="checkbox"
@@ -79,7 +98,6 @@ const FileSelector = () => {
         />
         Use Directory
       </span>
-
       <input
         className="m-4 hidden"
         type="file"
@@ -87,8 +105,10 @@ const FileSelector = () => {
         onChange={updateFiles}
         multiple
       />
-      <Button onClick={() => inputRef.current?.click()}>Select files</Button>
-    </>
+      <Button variant="outlined" onClick={() => inputRef.current?.click()}>
+        Select files
+      </Button>
+    </Paper>
   );
 };
 

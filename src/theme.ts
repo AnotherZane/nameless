@@ -30,13 +30,11 @@ const createAstralTheme = (
   rootElement: HTMLElement | null,
   darkMode = true
 ) => {
-
   // Set dark attribute to let tailwind know it should use dark variants of colors
   if (darkMode) {
     rootElement?.setAttribute("class", "dark");
-  }
-  else {
-	rootElement?.setAttribute("class", "");
+  } else {
+    rootElement?.setAttribute("class", "");
   }
 
   return createTheme({
@@ -72,27 +70,27 @@ const createAstralTheme = (
       fontFamily: '"DIN", "Helvetica", sans-serif',
       h1: {
         fontFamily: '"Montserrat", "DIN", "Helvetica", sans-serif',
-        fontWeight: 500
+        fontWeight: 500,
       },
       h2: {
         fontFamily: '"Montserrat", "DIN", "Helvetica", sans-serif',
-        fontWeight: 500
+        fontWeight: 500,
       },
       h3: {
         fontFamily: '"Montserrat", "DIN", "Helvetica", sans-serif',
-        fontWeight: 500
+        fontWeight: 500,
       },
       h4: {
         fontFamily: '"Montserrat", "DIN", "Helvetica", sans-serif',
-        fontWeight: 500
+        fontWeight: 500,
       },
       h5: {
         fontFamily: '"Montserrat", "DIN", "Helvetica", sans-serif',
-        fontWeight: 500
+        fontWeight: 500,
       },
       h6: {
         fontFamily: '"Montserrat", "DIN", "Helvetica", sans-serif',
-        fontWeight: 500
+        fontWeight: 500,
       },
       button: {
         textTransform: "none",
@@ -105,35 +103,42 @@ const createAstralTheme = (
     components: {
       MuiCssBaseline: {
         styleOverrides: {
-          // DIN Regular 400
+          a: {
+            color: darkMode ? primary : accent,
+            textDecoration: "none",
+          },
+          "a:hover": {
+            textDecoration: "underline",
+          },
           body: {
-            margin: "0 5%"
+            margin: "0 5%",
           },
           "@media (min-width: 640px)": {
             body: {
-              margin: "0 5%"
-            }
+              margin: "0 5%",
+            },
           },
           "@media (min-width: 768px)": {
             body: {
-              margin: "0 7.5%"
-            }
+              margin: "0 5%",
+            },
           },
           "@media (min-width: 1024px)": {
             body: {
-              margin: "0 10%"
-            }
+              margin: "0 7.5%",
+            },
           },
           "@media (min-width: 1280px)": {
             body: {
-              margin: "0 12.5%"
-            }
+              margin: "0 8%",
+            },
           },
           "@media (min-width: 1536px)": {
             body: {
-              margin: "0 15%"
-            }
+              margin: "0 10%",
+            },
           },
+          // DIN Regular 400
           "@font-face": {
             fontFamily: '"DIN"',
             fontDisplay: "swap",
@@ -145,22 +150,22 @@ const createAstralTheme = (
                   url(${DIN_Regular_400_TTF}) format('truetype')`,
           },
           h1: {
-            fontFamily: '"Montserrat", "DIN", "Helvetica", sans-serif'
+            fontFamily: '"Montserrat", "DIN", "Helvetica", sans-serif',
           },
           h2: {
-            fontFamily: '"Montserrat", "DIN", "Helvetica", sans-serif'
+            fontFamily: '"Montserrat", "DIN", "Helvetica", sans-serif',
           },
           h3: {
-            fontFamily: '"Montserrat", "DIN", "Helvetica", sans-serif'
+            fontFamily: '"Montserrat", "DIN", "Helvetica", sans-serif',
           },
           h4: {
-            fontFamily: '"Montserrat", "DIN", "Helvetica", sans-serif'
+            fontFamily: '"Montserrat", "DIN", "Helvetica", sans-serif',
           },
           h5: {
-            fontFamily: '"Montserrat", "DIN", "Helvetica", sans-serif'
+            fontFamily: '"Montserrat", "DIN", "Helvetica", sans-serif',
           },
           h6: {
-            fontFamily: '"Montserrat", "DIN", "Helvetica", sans-serif'
+            fontFamily: '"Montserrat", "DIN", "Helvetica", sans-serif',
           },
           fallbacks: [
             {
@@ -225,6 +230,21 @@ const createAstralTheme = (
       MuiModal: {
         defaultProps: {
           container: rootElement,
+        },
+      },
+      MuiAccordion: {
+        defaultProps: {
+          sx: {
+                ":before": {
+                  backgroundColor: "transparent",
+                  top: 0,
+                  height: 0,
+                  opacity: 0,
+                },
+                boxShadow: "unset",
+                backgroundImage: "unset",
+                borderBottom: darkMode ? "1px solid rgba(245, 245, 245, 0.2)" : "1px solid rgba(18, 18, 18, 0.2)",
+              },
         },
       },
     },
