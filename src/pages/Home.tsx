@@ -5,6 +5,7 @@ import {
   ListItem,
   ListItemAvatar,
   ListItemText,
+  Typography,
 } from "@mui/material";
 import React, { useEffect } from "react";
 import {
@@ -53,10 +54,15 @@ const Home = () => {
 
   return (
     <>
+      <div className="flex flex-col-reverse md:flex-row-reverse md:pt-16 mt-8 md:justify-around">
+        <div className="text-center hidden md:block">
+          <Typography variant="h4">Easy Peer To Peer File Sharing</Typography>
+        </div>
+        <FileSelector className="flex-1 md:flex-[0_0_50%] transition-[padding] duration-300 min-[500px]:px-6 sm:px-12 md:px-6 lg:px-8 xl:px-10 2xl:px-14" />
+      </div>
       <div className="flex flex-col w-fit">
         {shareRole == ShareRole.Sender ? (
           <>
-            <FileSelector />
             <p
               className="hover:text-primary-base"
               onClick={() => {
@@ -76,35 +82,6 @@ const Home = () => {
           </>
         ) : (
           <>
-            <List dense>
-              {sharedFileMetadata.map((file, idx) => (
-                <ListItem
-                  key={idx}
-                  // secondaryAction={
-                  //   <IconButton
-                  //     edge="end"
-                  //     size="small"
-                  //     aria-label="delete"
-                  //     onClick={() => removeFile(file)}
-                  //   >
-                  //     <Delete />
-                  //   </IconButton>
-                  // }
-                >
-                  <ListItemAvatar>
-                    <Avatar>
-                      <InsertDriveFile />
-                    </Avatar>
-                  </ListItemAvatar>
-                  <ListItemText
-                    primary={file.name}
-                    secondary={`${
-                      file.type != "" ? file.type : "Unknown type"
-                    }, ${fileSize(file.size)}`}
-                  />
-                </ListItem>
-              ))}
-            </List>
             <Button
               variant="contained"
               size="large"

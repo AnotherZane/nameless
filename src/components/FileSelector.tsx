@@ -2,24 +2,47 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   Avatar,
   Button,
+  Checkbox,
+  CircularProgress,
+  FormControlLabel,
   IconButton,
   List,
   ListItem,
   ListItemAvatar,
   ListItemText,
   Paper,
+  Tooltip,
+  Typography,
 } from "@mui/material";
-import { Delete, InsertDriveFile } from "@mui/icons-material";
+import {
+  Add,
+  AttachFile,
+  Delete,
+  HelpOutline,
+  InsertDriveFile,
+} from "@mui/icons-material";
 import { fileSize } from "humanize-plus";
-import { useSenderStore } from "../state";
+import { useReceiverStore, useSenderStore, useShareStore } from "../state";
+import { useSnackbar } from "notistack";
+import { CircularProgressWithIcon } from "./CircularProgressWithIcon";
+import { ShareRole } from "../astral/enums";
+import { FileMetadata } from "../astral/models";
 
-const FileSelector = () => {
+type FileSelectorProps = {
+  className?: string;
+};
+
+const FileSelector = ({ className }: FileSelectorProps) => {
+  const shareRole = useShareStore((s) => s.role);
   const inputRef = useRef<HTMLInputElement>(null);
   const [dirCheck, setDirCheck] = useState<boolean>(false);
 
   const [sharedFiles, addFiles, removeFile, clearFiles] = useSenderStore(
     (s) => [s.sharedFiles, s.addFiles, s.removeFile, s.clearFiles]
   );
+  const sharedMeta = useReceiverStore((r) => r.sharedMetadata);
+
+  const { closeSnackbar, enqueueSnackbar } = useSnackbar();
 
   useEffect(() => {
     if (!inputRef.current) return;
@@ -31,9 +54,26 @@ const FileSelector = () => {
   const updateFiles = () => {
     if (!inputRef.current) return;
 
-    if (inputRef.current.files && inputRef.current.files.length > 0) {
-      clearFiles();
-      addFiles(...Array.from(inputRef.current.files));
+    if (inputRef.current.files && inputRef.current.files.length) {
+      const existing = addFiles(...Array.from(inputRef.current.files));
+
+      if (existing.length) {
+        for (const file of existing) {
+          const message = (
+            <Typography variant="body2">
+              <span className="text-accent-base">{file.name} </span>
+              already selected, skipping...
+            </Typography>
+          );
+          const key = enqueueSnackbar(message, {
+            SnackbarProps: {
+              onClick: () => {
+                closeSnackbar(key);
+              },
+            },
+          });
+        }
+      }
     }
 
     // clear input selection
@@ -41,74 +81,143 @@ const FileSelector = () => {
   };
 
   return (
-    <Paper
-      elevation={4}
-      className="flex flex-col place-items-center max-w-fit p-4"
-    >
-      {sharedFiles.size > 0 && (
-        <Paper elevation={1}>
-          <List dense>
-            {Array.from(sharedFiles.entries())
-              .sort((a, b) => a[1].size - b[1].size)
-              .map(([id, file]) => (
-                <ListItem
-                  key={id}
-                  secondaryAction={
-                    <IconButton
-                      edge="end"
-                      size="small"
-                      aria-label="delete"
-                      onClick={() => removeFile(id)}
+    <div className={className}>
+      <Paper
+        elevation={4}
+        className="flex flex-col self-start p-3 md:p-5 min-h-[50vh] md:min-h-[60vh] max-h-[50vh] md:max-h-[60vh] transition-[height] duration-300"
+      >
+        {(shareRole == ShareRole.Sender
+          ? sharedFiles.size
+          : sharedMeta.length) > 0 ? (
+          <>
+            <Paper
+              id="file-list-container"
+              elevation={1}
+              className="grow overflow-auto"
+            >
+              <List dense>
+                {(shareRole == ShareRole.Sender
+                  ? Array.from(sharedFiles.entries())
+                  : sharedMeta.map<[number, FileMetadata]>((x) => [x.id, x])
+                )
+                  .sort((a, b) => a[1].size - b[1].size)
+                  .map(([id, file], idx) => (
+                    <ListItem
+                      key={id}
+                      secondaryAction={
+                        shareRole == ShareRole.Sender && (
+                          <IconButton
+                            edge="end"
+                            size="small"
+                            aria-label="delete"
+                            onClick={() => removeFile(id)}
+                          >
+                            <Delete fontSize="small" className="text-red-400" />
+                          </IconButton>
+                        )
+                      }
                     >
-                      <Delete />
-                    </IconButton>
-                  }
+                      <ListItemAvatar>
+                        <Avatar>
+                          <CircularProgressWithIcon
+                            icon={<InsertDriveFile />}
+                            className="text-emerald-400"
+                            variant="determinate"
+                            value={Math.min((idx + 1) * 10, 100)}
+                          />
+                        </Avatar>
+                      </ListItemAvatar>
+                      <ListItemText
+                        className="break-words"
+                        primary={file.name}
+                        secondary={`${
+                          file.type != "" ? file.type : "Unknown type"
+                        }, ${fileSize(file.size)}`}
+                      />
+                    </ListItem>
+                  ))}
+              </List>
+            </Paper>
+            {shareRole == ShareRole.Sender && (
+              <div className="flex justify-around space-x-4 mt-4 w-full">
+                <Button
+                  className="grow"
+                  variant="outlined"
+                  onClick={() => inputRef.current?.click()}
                 >
-                  <ListItemAvatar>
-                    <Avatar>
-                      <InsertDriveFile />
-                    </Avatar>
-                  </ListItemAvatar>
-                  <ListItemText
-                    primary={
-                      file.name.length <= 24
-                        ? file.name
-                        : file.name.substring(0, 12) +
-                          "..." +
-                          file.name.substring(file.name.length - 12)
-                    }
-                    secondary={`${
-                      file.type != ""
-                        ? file.type.length < 24
-                          ? file.type
-                          : file.type.substring(0, 21) + "..."
-                        : "Unknown type"
-                    }, ${fileSize(file.size)}`}
-                  />
-                </ListItem>
-              ))}
-          </List>
-        </Paper>
-      )}
-      <span>
-        <input
-          type="checkbox"
-          checked={dirCheck}
-          onChange={() => setDirCheck(!dirCheck)}
-        />
-        Use Directory
-      </span>
-      <input
-        className="m-4 hidden"
-        type="file"
-        ref={inputRef}
-        onChange={updateFiles}
-        multiple
-      />
-      <Button variant="outlined" onClick={() => inputRef.current?.click()}>
-        Select files
-      </Button>
-    </Paper>
+                  <AttachFile fontSize="small" />
+                  Add Files
+                </Button>
+                <Button
+                  className="grow"
+                  variant="outlined"
+                  color="error"
+                  onClick={() => clearFiles()}
+                >
+                  <Delete fontSize="small" />
+                  Clear All Files
+                </Button>
+              </div>
+            )}
+          </>
+        ) : (
+          <Paper
+            elevation={1}
+            className="grow flex flex-col justify-center items-center"
+            onClick={() => inputRef.current?.click()}
+          >
+            <div className="w-[40%] h-fit">
+              <Add
+                id="file-box-plus"
+                className="text-[#303030] min-w-full h-fit"
+                fontSize="large"
+              />
+              <div className="min-w-full h-1 bg-[#303030]"></div>
+            </div>
+            <Typography className="text-zinc-500 mt-4 text-center" variant="h5">
+              Select or drop files here!
+            </Typography>
+          </Paper>
+        )}
+
+        {shareRole == ShareRole.Sender && (
+          <>
+            <input
+              className="hidden"
+              type="file"
+              ref={inputRef}
+              onChange={updateFiles}
+              multiple
+            />
+            <FormControlLabel
+              className="mt-2"
+              control={
+                <Checkbox
+                  size="small"
+                  checked={dirCheck}
+                  onChange={() => setDirCheck(!dirCheck)}
+                />
+              }
+              label={
+                <>
+                  <div className="flex items-center space-x-2 flex-wrap">
+                    <Typography variant="body2">
+                      Use Directory Selector
+                    </Typography>
+                    <Tooltip title="Should the file selector allow selecting directories?">
+                      <HelpOutline
+                        className="-mb-[2px] text-primary-base"
+                        fontSize="inherit"
+                      />
+                    </Tooltip>
+                  </div>
+                </>
+              }
+            />
+          </>
+        )}
+      </Paper>
+    </div>
   );
 };
 

@@ -1,27 +1,31 @@
 /** @type {import('tailwindcss').Config} */
 import { alpha } from "@mui/material";
 
-const primary = "#e6cca3";
-const accent = "#9798E6";
+const PRIMARY = "#e6cca3";
+const ACCENT = "#9798E6";
 
 module.exports = {
   content: ["./src/**/*.{js,jsx,ts,tsx}"],
+
+  // Make sure that tailwind can override mui
   important: "#root",
+
+  // Use dark mode based on a 'dark' class on the root element
   darkMode: "class",
   theme: {
     extend: {
       colors: {
         primary: {
-          base: primary,
-          main: alpha(primary, 0.7),
-          light: alpha(primary, 0.5),
-          dark: alpha(primary, 0.9),
+          base: PRIMARY,
+          main: alpha(PRIMARY, 0.7),
+          light: alpha(PRIMARY, 0.5),
+          dark: alpha(PRIMARY, 0.9),
         },
         accent: {
-          base: accent,
-          main: alpha(accent, 0.7),
-          light: alpha(accent, 0.5),
-          dark: alpha(accent, 0.9),
+          base: ACCENT,
+          main: alpha(ACCENT, 0.7),
+          light: alpha(ACCENT, 0.5),
+          dark: alpha(ACCENT, 0.9),
         },
         secondary: {
           light: "#e9e9e9",
@@ -37,6 +41,8 @@ module.exports = {
         },
       },
     },
+
+    // Set default font family
     fontFamily: {
       sans: ["DIN", "Helvetica", "sans-serif"],
     },

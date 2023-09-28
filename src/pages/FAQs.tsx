@@ -7,6 +7,7 @@ import {
 } from "@mui/material";
 import React from "react";
 import { Link } from "react-router-dom";
+import { PageHeader } from "../components";
 
 type FAQProps = {
   title: React.ReactNode;
@@ -29,9 +30,7 @@ const FAQ = ({ title, children }: FAQProps) => {
 const FAQs = () => {
   return (
     <>
-      <Typography variant="h4" className="underline my-4">
-        FAQs
-      </Typography>
+      <PageHeader>FAQs</PageHeader>
       <Typography className="mb-2">
         Welcome to our Frequently Asked Questions FAQs section! Here, we aim to
         provide you with quick and informative answers to some of the most

@@ -1,12 +1,10 @@
-import { Typography } from "@mui/material";
 import React from "react";
+import { PageHeader } from "../components";
 
 const Privacy = () => {
   return (
     <>
-      <Typography variant="h4" className="underline my-4">
-        Privacy
-      </Typography>
+      <PageHeader>Privacy</PageHeader>
     </>
   );
 };

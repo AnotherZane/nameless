@@ -13,8 +13,8 @@ import DIN_Bold_700_TTF from "./fonts/DIN/DIN_Bold_700.ttf";
 // import DIN_Black_900_WOFF from "./fonts/DIN/DIN_Black_900.woff";
 // import DIN_Black_900_TTF from "./fonts/DIN/DIN_Black_900.ttf";
 
-const primary = "#e6cca3";
-const accent = "#9798E6";
+const PRIMARY = "#e6cca3";
+const ACCENT = "#9798E6";
 
 declare module "@mui/material/styles" {
   interface Palette {
@@ -30,7 +30,7 @@ const createAstralTheme = (
   rootElement: HTMLElement | null,
   darkMode = true
 ) => {
-  // Set dark attribute to let tailwind know it should use dark variants of colors
+  // Set dark class attribute to let tailwind know it should use dark variants of colors
   if (darkMode) {
     rootElement?.setAttribute("class", "dark");
   } else {
@@ -41,22 +41,24 @@ const createAstralTheme = (
     palette: {
       mode: darkMode ? "dark" : "light",
       primary: {
-        main: primary,
-        light: alpha(primary, 0.5),
-        dark: alpha(primary, 0.9),
+        main: PRIMARY,
+        light: alpha(PRIMARY, 0.5),
+        dark: alpha(PRIMARY, 0.9),
         contrastText:
-          getContrastRatio(primary, "#fff") > 4.5 ? "#fefdfb" : "#121212",
+          getContrastRatio(PRIMARY, "#fff") > 4.5 ? "#fefdfb" : "#121212",
       },
       secondary: {
         main: darkMode ? "#1d1d1d" : "#e9e9e9",
       },
+
+      // Custom color variants
       // Usage: https://mui.com/material-ui/customization/palette/#provide-tokens-manually:~:text=To%20use%20a,a%20Button%20component%3A
       accent: {
-        main: accent,
-        light: alpha(accent, 0.5),
-        dark: alpha(accent, 0.9),
+        main: ACCENT,
+        light: alpha(ACCENT, 0.5),
+        dark: alpha(ACCENT, 0.9),
         contrastText:
-          getContrastRatio(accent, "#fff") > 4.5 ? "#fefdfb" : "#121212",
+          getContrastRatio(ACCENT, "#fff") > 4.5 ? "#fefdfb" : "#121212",
       },
       text: {
         primary: darkMode ? "#fefdfb" : "#121212",
@@ -66,6 +68,8 @@ const createAstralTheme = (
         paper: darkMode ? "#121212" : "#fefdfb",
       },
     },
+
+    // Set default fonts and weights
     typography: {
       fontFamily: '"DIN", "Helvetica", sans-serif',
       h1: {
@@ -92,6 +96,8 @@ const createAstralTheme = (
         fontFamily: '"Montserrat", "DIN", "Helvetica", sans-serif',
         fontWeight: 500,
       },
+
+      // Disable mui text transformation to uppercase
       button: {
         textTransform: "none",
       },
@@ -104,37 +110,96 @@ const createAstralTheme = (
       MuiCssBaseline: {
         styleOverrides: {
           a: {
-            color: darkMode ? primary : accent,
+            // Default highlight color
+            color: darkMode ? PRIMARY : ACCENT,
+            // No underline
             textDecoration: "none",
           },
+
+          // Underline on hover
           "a:hover": {
             textDecoration: "underline",
           },
+
+          // Set default height to 100%
+          html: {
+            height: "100%",
+          },
           body: {
+            height: "100%",
+          },
+          "#root": {
+            height: "100%",
+
+            // Scroll on the #root element
+            overflow: "auto",
+          },
+
+          // Custom scrollbar
+          "#root::-webkit-scrollbar": {
+            width: "12px",
+            height: "12px",
+            display: "none",
+          },
+          "#root::-webkit-scrollbar-track": {
+            background: "transparent",
+          },
+          "#root::-webkit-scrollbar-thumb": {
+            background: darkMode ? "#333333" : "#dddddd",
+            visibility: "hidden",
+          },
+          "#root:hover::-webkit-scrollbar-thumb": {
+            visibility: "visible",
+          },
+
+          // File list scrollbar
+          "#file-list-container::-webkit-scrollbar": {
+            width: "8px",
+            height: "8px",
+          },
+          "#file-list-container::-webkit-scrollbar-track": {
+            background: "transparent",
+          },
+          "#file-list-container::-webkit-scrollbar-thumb": {
+            background: darkMode ? "#333333" : "#dddddd",
+          },
+
+          // Main inner container for the navbar and pages
+          // Responsive x margin sizing on app
+          "#app": {
+            minHeight: "100%",
             margin: "0 5%",
+            // minWidth: "250px",
+            transitionProperty: "margin",
+            transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
+            transitionDuration: "300ms",
           },
           "@media (min-width: 640px)": {
-            body: {
+            // Hide scrollbar when in phone view
+            "#root::-webkit-scrollbar": {
+              display: "block",
+            },
+            "#app": {
               margin: "0 5%",
             },
           },
           "@media (min-width: 768px)": {
-            body: {
+            "#app": {
               margin: "0 5%",
             },
           },
           "@media (min-width: 1024px)": {
-            body: {
+            "#app": {
               margin: "0 7.5%",
             },
           },
           "@media (min-width: 1280px)": {
-            body: {
+            "#app": {
               margin: "0 8%",
             },
           },
           "@media (min-width: 1536px)": {
-            body: {
+            "#app": {
               margin: "0 10%",
             },
           },
@@ -149,24 +214,33 @@ const createAstralTheme = (
                   url(${DIN_Regular_400_WOFF}) format('woff'),
                   url(${DIN_Regular_400_TTF}) format('truetype')`,
           },
+          // Default html elements, sizes don't match Typography
           h1: {
             fontFamily: '"Montserrat", "DIN", "Helvetica", sans-serif',
+            fontWeight: 500,
           },
           h2: {
             fontFamily: '"Montserrat", "DIN", "Helvetica", sans-serif',
+            fontWeight: 500,
           },
           h3: {
             fontFamily: '"Montserrat", "DIN", "Helvetica", sans-serif',
+            fontWeight: 500,
           },
           h4: {
             fontFamily: '"Montserrat", "DIN", "Helvetica", sans-serif',
+            fontWeight: 500,
           },
           h5: {
             fontFamily: '"Montserrat", "DIN", "Helvetica", sans-serif',
+            fontWeight: 500,
           },
           h6: {
             fontFamily: '"Montserrat", "DIN", "Helvetica", sans-serif',
+            fontWeight: 500,
           },
+
+          // Use fallbacks as a hack to specify additional @font-face definitions
           fallbacks: [
             {
               // DIN Medium 500
@@ -194,6 +268,8 @@ const createAstralTheme = (
                       url(${DIN_Bold_700_TTF}) format('truetype')`,
               },
             },
+
+            // We don't currently need this weight
             // {
             //   // DIN Black 900
             //   "@font-face": {
@@ -232,19 +308,23 @@ const createAstralTheme = (
           container: rootElement,
         },
       },
+
+      // Accordion customization
       MuiAccordion: {
         defaultProps: {
           sx: {
-                ":before": {
-                  backgroundColor: "transparent",
-                  top: 0,
-                  height: 0,
-                  opacity: 0,
-                },
-                boxShadow: "unset",
-                backgroundImage: "unset",
-                borderBottom: darkMode ? "1px solid rgba(245, 245, 245, 0.2)" : "1px solid rgba(18, 18, 18, 0.2)",
-              },
+            ":before": {
+              backgroundColor: "transparent",
+              top: 0,
+              height: 0,
+              opacity: 0,
+            },
+            boxShadow: "unset",
+            backgroundImage: "unset",
+            borderBottom: darkMode
+              ? "1px solid rgba(245, 245, 245, 0.2)"
+              : "1px solid rgba(18, 18, 18, 0.2)",
+          },
         },
       },
     },

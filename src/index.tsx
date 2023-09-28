@@ -28,6 +28,7 @@ const defaultRouter = createBrowserRouter([
   {
     path: "/",
     element: <App />,
+    // TODO: custom 404
     // errorElement: <></>,
     children: [
       {
