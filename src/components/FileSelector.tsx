@@ -3,7 +3,6 @@ import {
   Avatar,
   Button,
   Checkbox,
-  CircularProgress,
   FormControlLabel,
   IconButton,
   List,
@@ -22,20 +21,22 @@ import {
   InsertDriveFile,
 } from "@mui/icons-material";
 import { fileSize } from "humanize-plus";
-import { useReceiverStore, useSenderStore, useShareStore } from "../state";
+import {
+  useReceiverStore,
+  useSenderStore,
+  useShareStore,
+  useThemeStore,
+} from "../state";
 import { useSnackbar } from "notistack";
 import { CircularProgressWithIcon } from "./CircularProgressWithIcon";
 import { ShareRole } from "../astral/enums";
 import { FileMetadata } from "../astral/models";
 
-type FileSelectorProps = {
-  className?: string;
-};
-
-const FileSelector = ({ className }: FileSelectorProps) => {
+const FileSelector = () => {
   const shareRole = useShareStore((s) => s.role);
   const inputRef = useRef<HTMLInputElement>(null);
   const [dirCheck, setDirCheck] = useState<boolean>(false);
+  const theme = useThemeStore((t) => t.theme);
 
   const [sharedFiles, addFiles, removeFile, clearFiles] = useSenderStore(
     (s) => [s.sharedFiles, s.addFiles, s.removeFile, s.clearFiles]
@@ -80,144 +81,169 @@ const FileSelector = ({ className }: FileSelectorProps) => {
     inputRef.current.value = "";
   };
 
+  const hasFiles =
+    (shareRole == ShareRole.Sender ? sharedFiles.size : sharedMeta.length) > 0;
+
   return (
-    <div className={className}>
-      <Paper
-        elevation={4}
-        className="flex flex-col self-start p-3 md:p-5 min-h-[50vh] md:min-h-[60vh] max-h-[50vh] md:max-h-[60vh] transition-[height] duration-300"
-      >
-        {(shareRole == ShareRole.Sender
-          ? sharedFiles.size
-          : sharedMeta.length) > 0 ? (
-          <>
-            <Paper
-              id="file-list-container"
-              elevation={1}
-              className="grow overflow-auto"
-            >
-              <List dense>
-                {(shareRole == ShareRole.Sender
-                  ? Array.from(sharedFiles.entries())
-                  : sharedMeta.map<[number, FileMetadata]>((x) => [x.id, x])
-                )
-                  .sort((a, b) => a[1].size - b[1].size)
-                  .map(([id, file], idx) => (
-                    <ListItem
-                      key={id}
-                      secondaryAction={
-                        shareRole == ShareRole.Sender && (
-                          <IconButton
-                            edge="end"
-                            size="small"
-                            aria-label="delete"
-                            onClick={() => removeFile(id)}
-                          >
-                            <Delete fontSize="small" className="text-red-400" />
-                          </IconButton>
-                        )
-                      }
-                    >
-                      <ListItemAvatar>
-                        <Avatar>
-                          <CircularProgressWithIcon
-                            icon={<InsertDriveFile />}
-                            className="text-emerald-400"
-                            variant="determinate"
-                            value={Math.min((idx + 1) * 10, 100)}
-                          />
-                        </Avatar>
-                      </ListItemAvatar>
-                      <ListItemText
-                        className="break-words"
-                        primary={file.name}
-                        secondary={`${
-                          file.type != "" ? file.type : "Unknown type"
-                        }, ${fileSize(file.size)}`}
-                      />
-                    </ListItem>
-                  ))}
-              </List>
-            </Paper>
-            {shareRole == ShareRole.Sender && (
-              <div className="flex justify-around space-x-4 mt-4 w-full">
-                <Button
-                  className="grow"
-                  variant="outlined"
-                  onClick={() => inputRef.current?.click()}
-                >
-                  <AttachFile fontSize="small" />
-                  Add Files
-                </Button>
-                <Button
-                  className="grow"
-                  variant="outlined"
-                  color="error"
-                  onClick={() => clearFiles()}
-                >
-                  <Delete fontSize="small" />
-                  Clear All Files
-                </Button>
-              </div>
-            )}
-          </>
-        ) : (
+    <Paper
+      elevation={4}
+      className={
+        "flex flex-col self-start px-3 pt-3 pb-1 md:px-5 md:pt-5 md:pb-2 min-h-[50vh] max-h-[420px] transition-[height] duration-300 " +
+        (theme == "dark"
+          ? ""
+          : "bg-gradient-to-b from-[rgba(130,130,130,0.09)] to-[rgba(130,130,130,0.09)]")
+      }
+    >
+      {hasFiles ? (
+        <>
           <Paper
             elevation={1}
-            className="grow flex flex-col justify-center items-center"
-            onClick={() => inputRef.current?.click()}
+            className={
+              "file-list-container grow overflow-auto " +
+              (theme == "dark"
+                ? ""
+                : "bg-gradient-to-b from-[rgba(200,200,200,0.09)] to-[rgba(200,200,200,0.09)]")
+            }
           >
-            <div className="w-[40%] h-fit">
-              <Add
-                id="file-box-plus"
-                className="text-[#303030] min-w-full h-fit"
-                fontSize="large"
-              />
-              <div className="min-w-full h-1 bg-[#303030]"></div>
-            </div>
-            <Typography className="text-zinc-500 mt-4 text-center" variant="h5">
-              Select or drop files here!
-            </Typography>
+            <List dense>
+              {(shareRole == ShareRole.Sender
+                ? Array.from(sharedFiles.entries())
+                : sharedMeta.map<[number, FileMetadata]>((x) => [x.id, x])
+              )
+                .sort((a, b) => a[1].size - b[1].size)
+                .map(([id, file], idx) => (
+                  <ListItem
+                    key={id}
+                    secondaryAction={
+                      shareRole == ShareRole.Sender && (
+                        <IconButton
+                          edge="end"
+                          size="small"
+                          aria-label="delete"
+                          onClick={() => removeFile(id)}
+                        >
+                          <Delete
+                            fontSize="small"
+                            className="dark:text-red-400 text-red-500"
+                          />
+                        </IconButton>
+                      )
+                    }
+                  >
+                    <ListItemAvatar>
+                      <Avatar>
+                        <CircularProgressWithIcon
+                          icon={<InsertDriveFile />}
+                          className="dark:text-emerald-400 text-green-500"
+                          variant="determinate"
+                          value={Math.min((idx + 1) * 10, 100)}
+                        />
+                      </Avatar>
+                    </ListItemAvatar>
+                    <ListItemText
+                      className="break-words"
+                      primary={file.name}
+                      secondary={`${
+                        file.type != "" ? file.type : "Unknown type"
+                      }, ${fileSize(file.size)}`}
+                    />
+                  </ListItem>
+                ))}
+            </List>
           </Paper>
-        )}
+        </>
+      ) : (
+        <Paper
+          elevation={1}
+          className="file-list-container grow overflow-auto flex flex-col justify-center items-center select-none"
+          onClick={() => inputRef.current?.click()}
+        >
+          <div className="w-[50%] md:w-[40%] lg:w-[30%] h-fit transition-[width] duration-300">
+            <Add
+              id="file-box-plus"
+              className="text-zinc-200 dark:text-[#3a3a3a] min-w-full h-fit"
+              fontSize="large"
+            />
+            <div className="min-w-full max-w-full border-dashed border-2 border-zinc-400 dark:border-[#3d3d3d]"></div>
+          </div>
+          <Typography
+            className="text-zinc-500 dark:text-[#4d4d4d] mt-4 px-2 text-center select-none"
+            variant="h5"
+          >
+            Select or drop files here!
+          </Typography>
+        </Paper>
+      )}
 
-        {shareRole == ShareRole.Sender && (
-          <>
-            <input
-              className="hidden"
-              type="file"
-              ref={inputRef}
-              onChange={updateFiles}
-              multiple
+      <div
+        className={
+          "flex justify-between flex-col-reverse md:flex-row " +
+          (hasFiles ? "mt-4" : "mt-1")
+        }
+      >
+        <FormControlLabel
+          className="mt-1"
+          control={
+            <Checkbox
+              size="small"
+              checked={dirCheck}
+              onChange={() => setDirCheck(!dirCheck)}
             />
-            <FormControlLabel
-              className="mt-2"
-              control={
-                <Checkbox
-                  size="small"
-                  checked={dirCheck}
-                  onChange={() => setDirCheck(!dirCheck)}
-                />
+          }
+          label={
+            <>
+              <div className="flex items-center space-x-2 flex-wrap">
+                <Typography variant="body2">Use Directory Selector</Typography>
+                <Tooltip title="Should the file selector allow selecting directories?">
+                  <HelpOutline
+                    className="-mb-[2px] text-primary-base"
+                    fontSize="inherit"
+                  />
+                </Tooltip>
+              </div>
+            </>
+          }
+        />
+        {hasFiles && shareRole == ShareRole.Sender && (
+          <div className="flex flex-[0_0_50%] justify-around space-x-4 w-full md:w-auto">
+            <Button
+              className={
+                theme == "dark"
+                  ? "grow"
+                  : "grow text-accent-500 border-accent-400 hover:border-accent-500 hover:bg-accent-500/[0.06]"
               }
-              label={
-                <>
-                  <div className="flex items-center space-x-2 flex-wrap">
-                    <Typography variant="body2">
-                      Use Directory Selector
-                    </Typography>
-                    <Tooltip title="Should the file selector allow selecting directories?">
-                      <HelpOutline
-                        className="-mb-[2px] text-primary-base"
-                        fontSize="inherit"
-                      />
-                    </Tooltip>
-                  </div>
-                </>
-              }
-            />
-          </>
+              variant="outlined"
+              color="accent"
+              onClick={() => inputRef.current?.click()}
+            >
+              <AttachFile fontSize="small" />
+              Add Files
+            </Button>
+            <Button
+              className="grow"
+              variant="outlined"
+              color="error"
+              onClick={() => clearFiles()}
+            >
+              <Delete fontSize="small" />
+              Clear All Files
+            </Button>
+          </div>
         )}
-      </Paper>
-    </div>
+      </div>
+
+      {shareRole == ShareRole.Sender && (
+        <>
+          <input
+            className="hidden"
+            type="file"
+            ref={inputRef}
+            onChange={updateFiles}
+            multiple
+          />
+        </>
+      )}
+    </Paper>
   );
 };
 

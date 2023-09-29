@@ -16,7 +16,7 @@ const Demo = () => {
             <Add fontSize="large" className="" />
           </Paper>
         </Paper> */}
-        <FileSelector className="flex-[0_0_50%] px-24 py-16" />
+        {/* <FileSelector className="flex-[0_0_50%] px-24 py-16" /> */}
         <div className="flex-[0_0_50%] text-center">
           <Typography variant="h3">Astral Share</Typography>
         </div>

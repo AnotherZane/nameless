@@ -12,12 +12,12 @@ type NavButtonProps = {
 
 const NavButton = ({ name, path }: NavButtonProps) => {
   return (
-    <Link to={path} className="no-underline">
+    <Link to={path} className="no-underline w-full">
       <Button
         variant="text"
-        className="w-full sm:w-auto py-2 sm:py-0 flex-shrink text-txt-dark dark:text-txt-light"
+        className="w-full sm:w-auto pt-2 sm:py-0 flex-shrink text-txt-dark dark:text-txt-light"
       >
-        <Typography className="text-lg sm:text-xl">{name}</Typography>
+        <Typography className="text-lg sm:text-xl lg:text-[22px]">{name}</Typography>
       </Button>
     </Link>
   );
@@ -43,20 +43,20 @@ const Navbar = ({ className }: NavbarProps) => {
           {/* TODO: Adjust based on media query */}
           <Link to="/" className="no-underline">
             <img
-              className="w-12 md:w-16 h-12 md:h-16 transition-[width,height] duration-300"
+              className="w-11 md:w-16 h-11 md:h-16 transition-[width,height] duration-300"
               src="/assets/images/astral_share_256.png"
               alt="Astral Share Logo"
-              width={width && width < 768 ? 48 : 64}
-              height={width && width < 768 ? 48 : 64}
+              width={width && width < 768 ? 44 : 64}
+              height={width && width < 768 ? 44 : 64}
             />
           </Link>
           <Link to="/" className="no-underline">
-            <h1 className="ml-4 md:ml-6 font-bold text-2xl min-[300px]:text-[1.625rem] transition-[font-size] duration-300 m-0 whitespace-nowrap text-transparent bg-clip-text bg-gradient-to-tr from-primary-base to-accent-base">
+            <h1 className="ml-4 md:ml-6 font-bold text-2xl sm:text-[1.625rem] transition-[font-size] duration-300 m-0 whitespace-nowrap text-transparent bg-clip-text bg-gradient-to-tr from-primary-base to-accent-base">
               Astral Share
             </h1>
           </Link>
           <IconButton
-            className="-mb-1 ml-auto sm:hidden"
+            className="-mb-1 ml-auto sm:hidden pt-1"
             onClick={() => setOpen(!open)}
           >
             {open ? <MenuOpen fontSize="medium" /> : <Menu fontSize="medium" />}

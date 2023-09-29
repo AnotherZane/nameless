@@ -7,7 +7,7 @@ type PageHeaderProps = {
 
 const PageHeader = ({ children }: PageHeaderProps) => {
   return (
-    <Typography variant="h4" className="underline my-4">
+    <Typography variant="h4" className="underline my-4 text-3xl md:text-[34px]">
       {children}
     </Typography>
   );

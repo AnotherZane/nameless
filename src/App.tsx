@@ -1,7 +1,7 @@
 import React from "react";
 import { Outlet } from "react-router-dom";
 import { Navbar } from "./components";
-import { SnackbarProvider, closeSnackbar } from "notistack";
+import { SnackbarProvider } from "notistack";
 
 const App = () => {
   return (

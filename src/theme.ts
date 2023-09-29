@@ -137,8 +137,8 @@ const createAstralTheme = (
 
           // Custom scrollbar
           "#root::-webkit-scrollbar": {
-            width: "12px",
-            height: "12px",
+            width: "8px",
+            height: "8px",
             display: "none",
           },
           "#root::-webkit-scrollbar-track": {
@@ -153,14 +153,14 @@ const createAstralTheme = (
           },
 
           // File list scrollbar
-          "#file-list-container::-webkit-scrollbar": {
+          ".file-list-container::-webkit-scrollbar": {
             width: "8px",
             height: "8px",
           },
-          "#file-list-container::-webkit-scrollbar-track": {
+          ".file-list-container::-webkit-scrollbar-track": {
             background: "transparent",
           },
-          "#file-list-container::-webkit-scrollbar-thumb": {
+          ".file-list-container::-webkit-scrollbar-thumb": {
             background: darkMode ? "#333333" : "#dddddd",
           },
 
@@ -189,6 +189,10 @@ const createAstralTheme = (
             },
           },
           "@media (min-width: 1024px)": {
+            "#root::-webkit-scrollbar": {
+              width: "12px",
+              height: "12px",
+            },
             "#app": {
               margin: "0 7.5%",
             },
