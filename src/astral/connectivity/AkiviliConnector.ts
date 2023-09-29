@@ -25,7 +25,7 @@ class AkiviliConnector {
 
   constructor() {
     this.connection = new HubConnectionBuilder()
-      .withUrl("http://localhost:5129/hub")
+      .withUrl(`${process.env.REACT_APP_ASTRAL_HUB_URL}/hub`)
       .withHubProtocol(new MessagePackHubProtocol())
       .withAutomaticReconnect()
       .build();
