@@ -9,9 +9,7 @@ import {
   FAQs,
   Privacy,
   PaletteTest,
-  Test,
   ShareRedirector,
-  ComponentTest,
 } from "./pages";
 import {
   CssBaseline,
@@ -51,10 +49,6 @@ const defaultRouter = createBrowserRouter([
         path: "privacy",
         element: <Privacy />,
       },
-      {
-        path: "component",
-        element: <ComponentTest />,
-      },
     ],
   },
   {
@@ -64,10 +58,6 @@ const defaultRouter = createBrowserRouter([
   {
     path: "/palette",
     element: <PaletteTest />,
-  },
-  {
-    path: "/test",
-    element: <Test />,
   },
 ]);
 
