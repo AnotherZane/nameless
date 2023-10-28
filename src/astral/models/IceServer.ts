@@ -11,13 +11,13 @@ class IceServer implements IMessagePackable {
     return [this.urls, this.username, this.credential];
   }
 
-  public toRTCIceServer() {
-    return {
-      urls: this.urls,
-      username: this.username,
-      credentials: this.credential,
-    };
-  }
+  // public toRTCIceServer() {
+  //   return {
+  //     urls: this.urls,
+  //     username: this.username,
+  //     credentials: this.credential,
+  //   };
+  // }
 
   static fromArray(array: unknown[]) {
     const arr = array as [

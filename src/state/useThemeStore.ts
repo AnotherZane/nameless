@@ -12,13 +12,22 @@ interface ThemeStore {
 const useThemeStore = create<ThemeStore>()(
   persist(
     (set, get) => ({
-      theme:
-        window && window.matchMedia("(prefers-color-scheme: dark)").matches
-          ? "dark"
-          : "light",
-      setTheme: (theme: ThemeOptions) => set({ theme: theme }),
-      toggleTheme: () =>
-        set({ theme: get().theme == "dark" ? "light" : "dark" }),
+      theme: window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light",
+      setTheme: (theme: ThemeOptions) => {
+        set({ theme: theme });
+        window.gtag("event", "update_theme", {
+          theme: theme,
+        });
+      },
+      toggleTheme: () => {
+        const newTheme = get().theme == "dark" ? "light" : "dark";
+        set({ theme: newTheme });
+        window.gtag("event", "update_theme", {
+          theme: newTheme,
+        });
+      },
     }),
     {
       name: "theme",

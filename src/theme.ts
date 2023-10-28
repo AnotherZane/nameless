@@ -153,14 +153,14 @@ const createAstralTheme = (
           },
 
           // File list scrollbar
-          ".file-list-container::-webkit-scrollbar": {
+          "#file-list-container::-webkit-scrollbar": {
             width: "8px",
             height: "8px",
           },
-          ".file-list-container::-webkit-scrollbar-track": {
+          "#file-list-container::-webkit-scrollbar-track": {
             background: "transparent",
           },
-          ".file-list-container::-webkit-scrollbar-thumb": {
+          "#file-list-container::-webkit-scrollbar-thumb": {
             background: darkMode ? "#333333" : "#dddddd",
           },
 

@@ -1,10 +1,12 @@
 enum AkiviliMethods {
   CreateShare = "CreateShare",
+  JoinShare = "JoinShare",
+  ReconnectToShare = "ReconnectToShare",
   RequestMetadata = "RequestMetadata",
   SendMetadata = "SendMetadata",
-  RequestRTC = "RequestRTC",
-  SendRTCOffer = "SendRTCOffer",
-  SendRTCAnswer = "SendRTCAnswer",
+  RequestRtc = "RequestRtc",
+  SendRtcOffer = "SendRtcOffer",
+  SendRtcAnswer = "SendRtcAnswer",
   SendIceCandidate = "SendIceCandidate",
 }
 

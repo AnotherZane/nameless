@@ -2,9 +2,9 @@ import {
   useConnectivityStore,
   useReceiverStore,
   useSenderStore,
-  useShareStore,
+  useSessionStore,
 } from "../../state";
-import { ITrailblazeMessage } from "../interfaces";
+import { IDownloader, ITrailblazeMessage } from "../interfaces";
 import {
   FilesRequestTrailblazeMessage,
   FileChunkTrailblazeMessage,
@@ -12,7 +12,8 @@ import {
   HandshakeTrailblazeMessage,
 } from "../models/trailblaze";
 import { ShareRole, TrailblazeMessageType } from "../enums";
-import streamSaver from "streamsaver";
+import { createDownloader } from "../transfers";
+import { ReadyTrailblazeMessage } from "../models/trailblaze/ReadyTrailblazeMessage";
 
 const DefaultIceServers = [
   { urls: "stun:stun.l.google.com:19302" },
@@ -43,7 +44,10 @@ class Trailblazer {
   private currentFileId: number;
 
   private lastChunkReceived: number;
-  private writer: WritableStreamDefaultWriter | null;
+  // private writer: WritableStreamDefaultWriter | null;
+  private downloader: IDownloader | null;
+
+  private _debug: HTMLDivElement;
 
   constructor(connectionId: string, iceServers: RTCIceServer[]) {
     iceServers.unshift(...DefaultIceServers);
@@ -71,7 +75,10 @@ class Trailblazer {
 
     this.currentFileId = 0;
 
-    this.writer = null;
+    // this.writer = null;
+    this.downloader = null;
+
+    this._debug = window.document.getElementById("_debug")! as HTMLDivElement;
   }
 
   public updateConfig = (config: RTCConfiguration) =>
@@ -98,6 +105,10 @@ class Trailblazer {
     await this.addPendingIceCandidates();
 
     return answer;
+  };
+
+  public setConnectionId = (id: string) => {
+    this.connectionId = id;
   };
 
   public setAnswer = async (answer: RTCSessionDescription) => {
@@ -176,9 +187,7 @@ class Trailblazer {
     const fileChunks = Math.ceil(file.size / this.fileDataSize);
     let chunk = 0;
 
-    const listener = async (e: unknown) => {
-      console.log("Chunks:", chunk);
-      console.log("BufferedAmountLow event:", e);
+    const listener = async () => {
       await _internalSendFile();
     };
 
@@ -208,6 +217,8 @@ class Trailblazer {
         this.channel.send(msgBytes);
 
         chunk += 1;
+        this._debug.innerText = `[Debug]\nChunks: ${chunk}`;
+
         bufferedAmount += msgBytes.length;
         // console.log(bufferedAmount, this.channel.bufferedAmount);
 
@@ -221,9 +232,9 @@ class Trailblazer {
               0
             );
           }
-          console.log(
-            `Paused sending, buffered amount: ${bufferedAmount} (announced: ${this.channel.bufferedAmount})`
-          );
+          // console.log(
+          //   `Paused sending, buffered amount: ${bufferedAmount} (announced: ${this.channel.bufferedAmount})`
+          // );
           break;
         }
       }
@@ -239,11 +250,11 @@ class Trailblazer {
       }
     };
 
-    const start = new FileTrailblazeMessage(
-      TrailblazeMessageType.FILE_START,
-      id
-    );
-    this.sendMessage(start);
+    // const start = new FileTrailblazeMessage(
+    //   TrailblazeMessageType.FILE_START,
+    //   id
+    // );
+    // this.sendMessage(start);
 
     this.channel.addEventListener("bufferedamountlow", listener);
     await _internalSendFile();
@@ -274,7 +285,7 @@ class Trailblazer {
   };
 
   private handleChannelOpen = () => {
-    if (useShareStore.getState().role == ShareRole.Receiver) {
+    if (useSessionStore.getState().role == ShareRole.Receiver) {
       const maxMessageSize = Math.min(
         this.connection.sctp?.maxMessageSize ?? this.maxMessageSize,
         MAX_CHUNK_SIZE
@@ -287,8 +298,8 @@ class Trailblazer {
     }
   };
 
-  private handleChannelMessage = (ev: MessageEvent<ArrayBuffer>) => {
-    console.log(ev);
+  private handleChannelMessage = async (ev: MessageEvent<ArrayBuffer>) => {
+    // console.log(ev);
     const data = new Uint8Array(ev.data);
     // console.log(data);
 
@@ -330,7 +341,7 @@ class Trailblazer {
         this.highWaterMark = Math.max(pong.size * 8, DEFAULT_HIGH_WATERMARK);
         this.channel!.bufferedAmountLowThreshold = this.lowWaterMark;
 
-        if (useShareStore.getState().role != ShareRole.Receiver) return;
+        if (useSessionStore.getState().role != ShareRole.Receiver) return;
         const files = useReceiverStore.getState().sharedMetadata;
 
         this.sendMessage(
@@ -349,7 +360,12 @@ class Trailblazer {
 
         if (this.currentFileId == 0) {
           this.currentFileId = this.requestedFiles.shift()!;
-          this.sendFile(this.currentFileId);
+          // this.sendFile(this.currentFileId);
+          const start = new FileTrailblazeMessage(
+            TrailblazeMessageType.FILE_START,
+            this.currentFileId
+          );
+          this.sendMessage(start);
         }
 
         break;
@@ -361,19 +377,24 @@ class Trailblazer {
           .sharedMetadata.find((x) => x.id == id);
 
         if (!meta) {
+          // TODO: Handle this
           console.error("Unknown file...");
           return;
         }
 
         this.currentFileId = id;
 
-        streamSaver.mitm = "/stream/mitm.html";
-        const stream = streamSaver.createWriteStream(meta.name, {
-          size: meta.size,
-        });
+        const state = useSessionStore.getState();
 
-        this.writer = stream.getWriter();
+        // TODO: Capabilties system
+        this.downloader = await createDownloader(meta, state.code!, state.id!);
+        await this.downloader.init();
+        await this.sendMessage(ReadyTrailblazeMessage.instance);
 
+        break;
+      }
+      case TrailblazeMessageType.RECEIVER_READY: {
+        this.sendFile(this.currentFileId);
         break;
       }
       case TrailblazeMessageType.FILE_CHUNK: {
@@ -383,15 +404,18 @@ class Trailblazer {
 
         this.lastChunkReceived += 1;
 
-        console.log("Writing", this.lastChunkReceived);
-        this.writer!.write(chunkMsg.data);
+        // console.log("Writing", this.lastChunkReceived);
+        this._debug.innerText = `[Debug]\nWriting: ${this.lastChunkReceived}`;
+        // this.writer!.write(chunkMsg.data);
+        this.downloader!.write(chunkMsg.data);
         break;
       }
       case TrailblazeMessageType.FILE_END: {
         const id = FileTrailblazeMessage.fromArray(data).id;
 
         console.log("Ended: " + id);
-        this.writer!.close();
+        // this.writer!.close();
+        this.downloader!.finish();
 
         const ack = new FileTrailblazeMessage(
           TrailblazeMessageType.FILE_ACK,
@@ -399,8 +423,10 @@ class Trailblazer {
         );
         this.sendMessage(ack);
 
-        this.writer = null;
+        // this.writer = null;
+        this.downloader = null;
         this.currentFileId = 0;
+        this.lastChunkReceived = -1;
         break;
       }
       case TrailblazeMessageType.FILE_ACK: {
@@ -408,7 +434,13 @@ class Trailblazer {
         if (this.requestedFiles.length > 0) {
           this.currentFileId = this.requestedFiles.shift()!;
           console.log("Sending next file");
-          this.sendFile(this.currentFileId);
+
+          const start = new FileTrailblazeMessage(
+            TrailblazeMessageType.FILE_START,
+            this.currentFileId
+          );
+
+          this.sendMessage(start);
         }
         break;
       }
