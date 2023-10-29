@@ -362,7 +362,7 @@ class Trailblazer {
           this.currentFileId = this.requestedFiles.shift()!;
           // this.sendFile(this.currentFileId);
           const start = new FileTrailblazeMessage(
-            TrailblazeMessageType.FILE_START,
+            TrailblazeMessageType.FILE_READY,
             this.currentFileId
           );
           this.sendMessage(start);
@@ -370,7 +370,7 @@ class Trailblazer {
 
         break;
       }
-      case TrailblazeMessageType.FILE_START: {
+      case TrailblazeMessageType.FILE_READY: {
         const id = FileTrailblazeMessage.fromArray(data).id;
         const meta = useReceiverStore
           .getState()
@@ -436,7 +436,7 @@ class Trailblazer {
           console.log("Sending next file");
 
           const start = new FileTrailblazeMessage(
-            TrailblazeMessageType.FILE_START,
+            TrailblazeMessageType.FILE_READY,
             this.currentFileId
           );
 

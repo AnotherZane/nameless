@@ -4,7 +4,7 @@ import { ITrailblazeMessage } from "../../interfaces";
 class FileTrailblazeMessage implements ITrailblazeMessage {
   constructor(readonly type: TrailblazeMessageType, readonly id: number) {
     if (
-      type != TrailblazeMessageType.FILE_START &&
+      type != TrailblazeMessageType.FILE_READY &&
       type != TrailblazeMessageType.FILE_END &&
       type != TrailblazeMessageType.FILE_ACK
     )

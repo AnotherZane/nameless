@@ -51,33 +51,50 @@ const Home = () => {
         }
       }
 
-      const fs = await requestFileSystem(
-        window.PERSISTENT,
-        1024 * 1024 * 1024 * 100
-      );
-
-      if (fs) {
-        const dirReader = fs.root.createReader();
-        const existing = await new Promise<FileSystemEntry[] | undefined>(
-          (res, rej) => dirReader.readEntries(res, rej)
+      if (window.requestFileSystem != undefined) {
+        const fs = await requestFileSystem(
+          window.PERSISTENT,
+          1024 * 1024 * 1024 * 100
         );
+
+        if (fs) {
+          const dirReader = fs.root.createReader();
+          const existing = await new Promise<FileSystemEntry[] | undefined>(
+            (res, rej) => dirReader.readEntries(res, rej)
+          );
+
+          const shares = useShareStore.getState().shares;
+
+          if (existing && existing.length > 0) {
+            for (const dir of existing) {
+              const vals = dir.name.split("_");
+              if (vals.length > 1 && shares.has(vals[1])) continue;
+
+              console.log("removing", dir);
+
+              dir.isDirectory
+                ? (dir as FileSystemDirectoryEntry).removeRecursively(
+                    console.log,
+                    console.log
+                  )
+                : dir.remove(console.log, console.log);
+            }
+          }
+        }
+      }
+
+      if (await window.navigator.storage.persisted()) {
+        const root = await window.navigator.storage.getDirectory();
 
         const shares = useShareStore.getState().shares;
 
-        if (existing && existing.length > 0) {
-          for (const dir of existing) {
-            const vals = dir.name.split("_");
-            if (vals.length > 1 && shares.has(vals[1])) continue;
+        for await (const [key, value] of root.entries()) {
+          const vals = value.name.split("_");
+          if (vals.length > 1 && shares.has(vals[1])) continue;
 
-            console.log("removing", dir);
+          console.log("removing", value);
 
-            dir.isDirectory
-              ? (dir as FileSystemDirectoryEntry).removeRecursively(
-                  console.log,
-                  console.log
-                )
-              : dir.remove(console.log, console.log);
-          }
+          await root.removeEntry(key, {recursive: true});
         }
       }
     };

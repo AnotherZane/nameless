@@ -17,6 +17,7 @@
     "@types/node": "^16.18.39",
     "@types/react": "^18.2.18",
     "@types/react-dom": "^18.2.7",
+    "@types/wicg-file-system-access": "^2023.10.2",
     "@typescript-eslint/eslint-plugin": "^5.62.0",
     "humanize-plus": "^1.8.2",
     "immer": "^10.0.3",

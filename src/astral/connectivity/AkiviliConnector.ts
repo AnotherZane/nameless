@@ -20,12 +20,18 @@ import {
 } from "../models";
 import { AkiviliMethods, NamelessMethods, ShareRole } from "../enums";
 import { Trailblazer } from "./Trailblazer";
-import { SnackbarKey, closeSnackbar, enqueueSnackbar } from "notistack";
+import {
+  SnackbarKey,
+  closeSnackbar,
+  enqueueSnackbar,
+} from "notistack";
 import { GenericResult } from "../models/GenericResult";
 
 class AkiviliConnector {
   private connection: HubConnection;
+
   private statusSnack?: SnackbarKey;
+  private createShareSnack?: SnackbarKey;
 
   constructor() {
     this.connection = new HubConnectionBuilder()
@@ -53,24 +59,53 @@ class AkiviliConnector {
   };
 
   public createShare = async () => {
-    const data = await this.connection.invoke<unknown[]>(
-      AkiviliMethods.CreateShare
-    );
-    const sc = ShareMetadata.fromArray(data);
-    const id = useShareStore.getState().addShare(
-      sc.code,
-      ShareRole.Sender,
-      this.connection.connectionId!,
-      sc.reconnectToken
-      // this.connection.connectionId!
-    );
-    const ss = useSessionStore.getState();
-    ss.setId(id);
-    ss.setCode(sc.code);
+    let retryCount = 0;
 
-    window.gtag("event", "create_share", {
-      share_code: sc.code,
+    this.createShareSnack = enqueueSnackbar("Creating share...", {
+      variant: "info",
+      persist: false,
     });
+
+    const retry = async () => {
+      if (this.connection.state != HubConnectionState.Connected) {
+        if (retryCount >= 5) {
+          enqueueSnackbar("Failed to create share...", {
+            variant: "error",
+          });
+
+          return;
+        }
+
+        retryCount++;
+
+        if (this.connection.state == HubConnectionState.Disconnected) {
+          await this.start();
+        }
+
+        window.setTimeout(retry, 500);
+      } else {
+        const data = await this.connection.invoke<unknown[]>(
+          AkiviliMethods.CreateShare
+        );
+        const sc = ShareMetadata.fromArray(data);
+        const id = useShareStore.getState().addShare(
+          sc.code,
+          ShareRole.Sender,
+          this.connection.connectionId!,
+          sc.reconnectToken
+          // this.connection.connectionId!
+        );
+        const ss = useSessionStore.getState();
+        ss.setId(id);
+        ss.setCode(sc.code);
+
+        window.gtag("event", "create_share", {
+          share_code: sc.code,
+        });
+      }
+    };
+
+    await retry();
   };
 
   public joinShare = async (code: string) => {
@@ -84,15 +119,20 @@ class AkiviliConnector {
     // const meta = ShareMetadata.fromArray(data);
 
     const existing = Array.from(useShareStore.getState().shares.entries()).find(
-      (x) => x[1].code == code && x[1].connectionId == this.connection.connectionId
+      (x) =>
+        x[1].code == code && x[1].connectionId == this.connection.connectionId
     );
 
-    const id = existing ? existing[0] : useShareStore.getState().addShare(
-      code,
-      ShareRole.Receiver,
-      this.connection.connectionId!,
-      data
-    );
+    const id = existing
+      ? existing[0]
+      : useShareStore
+          .getState()
+          .addShare(
+            code,
+            ShareRole.Receiver,
+            this.connection.connectionId!,
+            data
+          );
     useSessionStore.getState().setId(id);
 
     window.gtag("event", "join_share", {
