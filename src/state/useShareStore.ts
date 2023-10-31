@@ -4,6 +4,7 @@ import { immer } from "zustand/middleware/immer";
 import { ShareRole } from "../astral/enums";
 import { nanoid } from "nanoid";
 import { enableMapSet } from "immer";
+import { FileMetadata } from "../astral/models";
 
 enableMapSet();
 
@@ -12,7 +13,7 @@ interface Share {
   role: ShareRole;
   connectionId: string;
   reconnectToken: string;
-  // ownerId: string;
+  sharedMetadata: FileMetadata[];
 }
 
 interface ShareStore {
@@ -26,6 +27,8 @@ interface ShareStore {
   ) => string;
   getShare: (id: string) => Share | undefined;
   deleteShare: (id: string) => void;
+
+  setMetadata: (id: string, files: FileMetadata[]) => void;
 }
 
 const useShareStore = create<ShareStore>()(
@@ -47,7 +50,7 @@ const useShareStore = create<ShareStore>()(
             role,
             connectionId,
             reconnectToken,
-            // ownerId,
+            sharedMetadata: [],
           });
         });
 
@@ -57,6 +60,10 @@ const useShareStore = create<ShareStore>()(
       deleteShare: (id: string) =>
         set((state) => {
           state.shares.delete(id);
+        }),
+      setMetadata: (id: string, files: FileMetadata[]) =>
+        set((state) => {
+          state.shares.get(id)?.sharedMetadata.push(...files);
         }),
     })),
     {

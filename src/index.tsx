@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import "./styles/index.css";
-import { RouterProvider, createBrowserRouter } from "react-router-dom";
+import { Link, RouterProvider, createBrowserRouter } from "react-router-dom";
 import App from "./App";
 import {
   Home,
@@ -15,6 +15,8 @@ import {
   CssBaseline,
   StyledEngineProvider,
   ThemeProvider,
+  Tooltip,
+  Typography,
 } from "@mui/material";
 import { useThemeStore } from "./state";
 import { createAstralTheme } from "./theme";
@@ -27,16 +29,31 @@ const defaultRouter = createBrowserRouter([
     path: "/",
     element: <App />,
     // TODO: custom 404
-    // errorElement: <></>,
+    errorElement: (
+      <>
+        <div className="w-full h-screen flex flex-col space-y-2 items-center place-content-center">
+          <Typography className="mb-2" variant="h4">
+            <Tooltip title="All your base are belong to us" placement="top">
+              <Typography variant="h4" display={"inline"}>
+                404
+              </Typography>
+            </Tooltip>{" "}
+            - Page Not Found
+          </Typography>
+          <Typography>
+            Looks like you stumbled across a page that does not exist.
+          </Typography>
+          <Link to={"/"}>
+            <Typography>Click here to go to the main page.</Typography>
+          </Link>
+        </div>
+      </>
+    ),
     children: [
       {
         index: true,
         element: <Home />,
       },
-      // {
-      //   path: "receive",
-      //   element: <></>,
-      // },
       {
         path: "about",
         element: <About />,

@@ -7,7 +7,7 @@ interface SessionStore {
   setId: (id: string) => void;
 
   code?: string;
-  setCode: (code: string) => void;
+  setCode: (code?: string) => void;
 
   role: ShareRole;
   setRole: (role: ShareRole) => void;

@@ -20,11 +20,7 @@ import {
 } from "../models";
 import { AkiviliMethods, NamelessMethods, ShareRole } from "../enums";
 import { Trailblazer } from "./Trailblazer";
-import {
-  SnackbarKey,
-  closeSnackbar,
-  enqueueSnackbar,
-} from "notistack";
+import { SnackbarKey, closeSnackbar, enqueueSnackbar } from "notistack";
 import { GenericResult } from "../models/GenericResult";
 
 class AkiviliConnector {
@@ -51,6 +47,7 @@ class AkiviliConnector {
         console.log(err);
       }
 
+      // TODO: Handle removing this
       window.onbeforeunload = (e) => {
         e.preventDefault();
         return true;
@@ -61,10 +58,10 @@ class AkiviliConnector {
   public createShare = async () => {
     let retryCount = 0;
 
-    this.createShareSnack = enqueueSnackbar("Creating share...", {
-      variant: "info",
-      persist: false,
-    });
+    // this.createShareSnack = enqueueSnackbar("Creating share...", {
+    //   variant: "info",
+    //   persist: false,
+    // });
 
     const retry = async () => {
       if (this.connection.state != HubConnectionState.Connected) {
@@ -99,6 +96,12 @@ class AkiviliConnector {
         ss.setId(id);
         ss.setCode(sc.code);
 
+        const meta = Array.from(
+          useSenderStore.getState().sharedFiles.entries()
+        ).map(([id, file]) => FileMetadata.fromFile(id, file));
+
+        useShareStore.getState().setMetadata(id, meta);
+
         window.gtag("event", "create_share", {
           share_code: sc.code,
         });
@@ -114,7 +117,13 @@ class AkiviliConnector {
       code
     );
 
-    if (!data) throw new Error("No such share");
+    if (!data) {
+      await this.connection.stop();
+      const session = useSessionStore.getState();
+      session.setRole(ShareRole.Sender);
+      session.setCode(undefined);
+      return;
+    }
 
     // const meta = ShareMetadata.fromArray(data);
 
@@ -249,19 +258,17 @@ class AkiviliConnector {
   private metadataRequested = async (requester: string) => {
     const sender = useSenderStore.getState();
 
-    await this.connection.invoke(
-      AkiviliMethods.SendMetadata,
-      requester,
-      Array.from(sender.sharedFiles.entries()).map(([id, file]) =>
-        FileMetadata.fromFile(id, file).serialize()
-      )
+    const meta = Array.from(sender.sharedFiles.entries()).map(([id, file]) =>
+      FileMetadata.fromFile(id, file).serialize()
     );
+
+    await this.connection.invoke(AkiviliMethods.SendMetadata, requester, meta);
   };
 
   private metadataReceived = async (data: unknown[][]) => {
-    useReceiverStore.setState({
-      sharedMetadata: data.map((x) => FileMetadata.fromArray(x)),
-    });
+    useReceiverStore
+      .getState()
+      .addMetadata(...data.map((x) => FileMetadata.fromArray(x)));
   };
 
   private rtcRequested = async (requester: string, data: unknown[]) => {

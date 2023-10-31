@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Button, IconButton, ToggleButton, Typography } from "@mui/material";
 import { Link, To } from "react-router-dom";
-import useWindowDimensions from "../hooks/useWindowDimensions";
+import { useWindowDimensions } from "../hooks";
 import { DarkMode, LightMode, Menu, MenuOpen } from "@mui/icons-material";
 import { useThemeStore } from "../state";
 
@@ -17,7 +17,9 @@ const NavButton = ({ name, path }: NavButtonProps) => {
         variant="text"
         className="w-full sm:w-auto pt-2 sm:py-0 flex-shrink text-txt-dark dark:text-txt-light"
       >
-        <Typography className="text-lg sm:text-xl lg:text-[22px]">{name}</Typography>
+        <Typography className="text-lg sm:text-xl lg:text-[22px]">
+          {name}
+        </Typography>
       </Button>
     </Link>
   );
