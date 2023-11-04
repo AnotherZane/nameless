@@ -8,6 +8,7 @@ interface ConnectivityStore {
   addNameless: (id: string, connector: Trailblazer) => void;
   getNameless: (id: string) => Trailblazer | undefined;
   removeNameless: (id: string) => Trailblazer | undefined;
+  clearNameless: () => void;
 }
 
 const useConnectivityStore = create<ConnectivityStore>((set, get) => ({
@@ -28,6 +29,7 @@ const useConnectivityStore = create<ConnectivityStore>((set, get) => ({
 
     return con;
   },
+  clearNameless: () => set({ nameless: new Map<string, Trailblazer>() }),
 }));
 
 export { useConnectivityStore };

@@ -3,3 +3,4 @@ export { AkiviliMethods } from "./AkiviliMethods";
 export { NamelessMethods } from "./NamelessMethods";
 export { TrailblazeMessageType } from "./TrailblazeMessageType";
 export { Reason } from "./Reason";
+export { MemberState } from "./MemberState";

@@ -87,10 +87,10 @@ const ThemeWrapper = ({ root }: ThemeWrapperProps) => {
   const theme = createAstralTheme(root, themeSelection == "dark");
 
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <RouterProvider router={defaultRouter} />
-    </ThemeProvider>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <RouterProvider router={defaultRouter} />
+      </ThemeProvider>
   );
 };
 

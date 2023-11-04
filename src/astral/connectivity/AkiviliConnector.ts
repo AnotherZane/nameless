@@ -22,12 +22,13 @@ import { AkiviliMethods, NamelessMethods, ShareRole } from "../enums";
 import { Trailblazer } from "./Trailblazer";
 import { SnackbarKey, closeSnackbar, enqueueSnackbar } from "notistack";
 import { GenericResult } from "../models/GenericResult";
+import { formatShareLink } from "../../utils";
 
 class AkiviliConnector {
   private connection: HubConnection;
 
   private statusSnack?: SnackbarKey;
-  private createShareSnack?: SnackbarKey;
+  // private createShareSnack?: SnackbarKey;
 
   constructor() {
     this.connection = new HubConnectionBuilder()
@@ -66,8 +67,13 @@ class AkiviliConnector {
     const retry = async () => {
       if (this.connection.state != HubConnectionState.Connected) {
         if (retryCount >= 5) {
-          enqueueSnackbar("Failed to create share...", {
+          const key = enqueueSnackbar("Failed to create share...", {
             variant: "error",
+            SnackbarProps: {
+              onClick: () => {
+                closeSnackbar(key);
+              },
+            },
           });
 
           return;
@@ -101,6 +107,24 @@ class AkiviliConnector {
         ).map(([id, file]) => FileMetadata.fromFile(id, file));
 
         useShareStore.getState().setMetadata(id, meta);
+
+        try {
+          window.navigator.clipboard.writeText(
+            formatShareLink(document.location, sc.code)
+          );
+
+          const key = enqueueSnackbar("Copied share link...", {
+            SnackbarProps: {
+              onClick: () => {
+                closeSnackbar(key);
+              },
+            },
+          });
+        } catch (e) {
+          console.warn(e);
+        }
+
+        useSessionStore.getState().setStartTime(Date.now());
 
         window.gtag("event", "create_share", {
           share_code: sc.code,
@@ -142,7 +166,10 @@ class AkiviliConnector {
             this.connection.connectionId!,
             data
           );
-    useSessionStore.getState().setId(id);
+    useSessionStore.setState({
+      id: id,
+      startTime: Date.now(),
+    });
 
     window.gtag("event", "join_share", {
       share_code: code,
@@ -156,32 +183,36 @@ class AkiviliConnector {
     token: string,
     oldId: string
   ) => {
-    const data = await this.connection.invoke<unknown[] | undefined>(
+    const reconnectToken = await this.connection.invoke<string | undefined>(
       AkiviliMethods.ReconnectToShare,
       code,
       token,
       oldId
     );
 
-    if (!data) throw new Error("Failed to reconnect");
+    if (!reconnectToken) {
+      console.error("Failed to reconnect");
+      useShareStore.getState().deleteShare(useSessionStore.getState().id!);
+      return;
+    }
 
-    const sc = ShareMetadata.fromArray(data);
+    useShareStore
+      .getState()
+      .setCredentials(
+        useSessionStore.getState().id!,
+        this.connection.connectionId!,
+        reconnectToken
+      );
 
-    // Delete current share from store
-    useShareStore.getState().deleteShare(useSessionStore.getState().id!);
-
-    const id = useShareStore.getState().addShare(
-      code,
-      ShareRole.Receiver,
-      this.connection.connectionId!,
-      sc.reconnectToken
-      // sc.ownerId
-    );
-    useSessionStore.getState().setId(id);
+    useSessionStore.setState({
+      startTime: Date.now(),
+    });
 
     window.gtag("event", "reconnect_share", {
       share_code: code,
     });
+
+    // await this.requestMetadata();
   };
 
   public requestRtc = async (): Promise<void> =>
@@ -223,8 +254,23 @@ class AkiviliConnector {
       this.iceCandidateReceived
     );
 
+    this.connection.on(
+      NamelessMethods.ReceiverDisconnected,
+      this.receiverDisconnected
+    );
+
+    this.connection.on(
+      NamelessMethods.OwnerDisconnected,
+      this.ownerDisconnected
+    );
+
+    // this.connection.on(NamelessMethods.OwnerReconnected, this.ownerReconnected);
+    this.connection.on(NamelessMethods.ShareExpired, this.shareExpired);
+
     this.connection.on(NamelessMethods.Connected, () => {
       useConnectivityStore.setState({ pathConnected: true });
+
+      if (useSessionStore.getState().reconnect) console.log("Reconnected");
     });
 
     this.connection.onreconnected(() => {
@@ -266,9 +312,9 @@ class AkiviliConnector {
   };
 
   private metadataReceived = async (data: unknown[][]) => {
-    useReceiverStore
-      .getState()
-      .addMetadata(...data.map((x) => FileMetadata.fromArray(x)));
+    const rs = useReceiverStore.getState();
+    rs.clearMetadata();
+    rs.addMetadata(...data.map((x) => FileMetadata.fromArray(x)));
   };
 
   private rtcRequested = async (requester: string, data: unknown[]) => {
@@ -314,6 +360,46 @@ class AkiviliConnector {
     const conn = useConnectivityStore.getState().getNameless(sender);
 
     await conn!.addIceCandidate(candidate);
+  };
+
+  private receiverDisconnected = (id: string) => {
+    const cs = useConnectivityStore.getState();
+    const conn = cs.getNameless(id);
+
+    if (conn) {
+      conn.close();
+      cs.removeNameless(id);
+    }
+  };
+
+  private ownerDisconnected = () => {
+    if (!useSessionStore.getState().transferComplete) {
+      const key = enqueueSnackbar("Share closing...", {
+        variant: "error",
+        SnackbarProps: {
+          onClick: () => {
+            closeSnackbar(key);
+          },
+        },
+      });
+      useConnectivityStore.getState().clearNameless();
+      window.setTimeout(() => window.location.reload(), 3000);
+    }
+  };
+
+  private shareExpired = () => {
+    if (!useSessionStore.getState().transferComplete) {
+      const key = enqueueSnackbar("Share closing...", {
+        variant: "error",
+        SnackbarProps: {
+          onClick: () => {
+            closeSnackbar(key);
+          },
+        },
+      });
+      useConnectivityStore.getState().clearNameless();
+      window.setTimeout(() => window.location.reload(), 3000);
+    }
   };
 }
 

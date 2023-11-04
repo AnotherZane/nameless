@@ -1,3 +1,4 @@
+import { useReceiverStore } from "../../state";
 import { IDownloader } from "../interfaces";
 import { FileMetadata } from "../models";
 
@@ -11,7 +12,11 @@ class StorageManagerDownloader implements IDownloader {
   //   private downloadReady: boolean;
   private timeoutHandle: number | null;
 
-  constructor(private meta: FileMetadata, private folder: string) {
+  constructor(
+    private meta: FileMetadata,
+    private folder: string,
+    private start?: number
+  ) {
     this.buffer = [];
     this.lock = false;
     this.position = 0;
@@ -27,6 +32,10 @@ class StorageManagerDownloader implements IDownloader {
     if (file) {
       this.file = file;
       this.stream = await file.createWritable({ keepExistingData: true });
+      if (this.start) {
+        await this.stream.seek(this.start);
+        this.position = this.start;
+      }
       //   this.writer = stream.getWriter();
     }
 
@@ -79,6 +88,7 @@ class StorageManagerDownloader implements IDownloader {
         this.timeoutHandle = window.setTimeout(this._internalWrite, 40);
         break;
       }
+      useReceiverStore.getState().setProgress(this.meta.id, this.position);
       this.buffer.shift()!;
     }
     this.lock = false;

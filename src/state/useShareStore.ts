@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { StorageValue, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
-import { ShareRole } from "../astral/enums";
+import { MemberState, ShareRole } from "../astral/enums";
 import { nanoid } from "nanoid";
 import { enableMapSet } from "immer";
 import { FileMetadata } from "../astral/models";
@@ -14,6 +14,8 @@ interface Share {
   connectionId: string;
   reconnectToken: string;
   sharedMetadata: FileMetadata[];
+  created: number;
+  state: MemberState;
 }
 
 interface ShareStore {
@@ -29,6 +31,12 @@ interface ShareStore {
   deleteShare: (id: string) => void;
 
   setMetadata: (id: string, files: FileMetadata[]) => void;
+  setState: (id: string, state: MemberState) => void;
+  setCredentials: (
+    id: string,
+    connectionId: string,
+    reconnectToken: string
+  ) => void;
 }
 
 const useShareStore = create<ShareStore>()(
@@ -40,7 +48,6 @@ const useShareStore = create<ShareStore>()(
         role: ShareRole,
         connectionId: string,
         reconnectToken: string
-        // ownerId: string
       ) => {
         const id = nanoid(12);
 
@@ -51,6 +58,11 @@ const useShareStore = create<ShareStore>()(
             connectionId,
             reconnectToken,
             sharedMetadata: [],
+            created: Date.now(),
+            state:
+              role == ShareRole.Sender
+                ? MemberState.OwnerConnected
+                : MemberState.Receiver,
           });
         });
 
@@ -63,7 +75,27 @@ const useShareStore = create<ShareStore>()(
         }),
       setMetadata: (id: string, files: FileMetadata[]) =>
         set((state) => {
-          state.shares.get(id)?.sharedMetadata.push(...files);
+          const share = state.shares.get(id);
+          if (share) {
+            share.sharedMetadata = files;
+          }
+        }),
+      setState: (id: string, memberState: MemberState) =>
+        set((state) => {
+          const share = state.shares.get(id);
+          if (share) share.state = memberState;
+        }),
+      setCredentials: (
+        id: string,
+        connectionId: string,
+        reconnectToken: string
+      ) =>
+        set((state) => {
+          const share = state.shares.get(id);
+          if (share) {
+            share.connectionId = connectionId;
+            share.reconnectToken = reconnectToken;
+          }
         }),
     })),
     {
@@ -96,3 +128,4 @@ const useShareStore = create<ShareStore>()(
 );
 
 export { useShareStore };
+export type { Share };

@@ -1,3 +1,4 @@
+import { useReceiverStore } from "../../state";
 import { IDownloader } from "../interfaces";
 import { FileMetadata } from "../models";
 
@@ -13,7 +14,8 @@ class FileSystemDownloader implements IDownloader {
   constructor(
     private fs: FileSystem,
     private meta: FileMetadata,
-    private folder: string
+    private folder: string,
+    private start?: number
   ) {
     this.buffer = [];
     this.lock = false;
@@ -46,6 +48,12 @@ class FileSystemDownloader implements IDownloader {
             (file as FileSystemFileEntry).createWriter(resolve, reject)
         );
       }
+    }
+
+    if (this.start) {
+      this.writer!.seek(this.start);
+      this.position = this.start;
+      console.log("Seeked to", this.start);
     }
 
     this.writer!.addEventListener("writeend", () =>
@@ -97,6 +105,7 @@ class FileSystemDownloader implements IDownloader {
         this.timeoutHandle = window.setTimeout(this._internalWrite, 40);
         break;
       }
+      useReceiverStore.getState().setProgress(this.meta.id, this.position);
       this.buffer.shift()!;
     }
     this.lock = false;

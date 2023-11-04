@@ -23,14 +23,16 @@ const ShareRedirector = () => {
         {
           method: "HEAD",
         }
-      );
+      ).catch((e) => console.error(e));
 
-      if (res.ok) {
-        setCode(code);
-        setRole(ShareRole.Receiver);
-        nav("/");
-      } else {
-        setIsExpired(true);
+      if (res) {
+        if (res.ok) {
+          setCode(code);
+          setRole(ShareRole.Receiver);
+          nav("/");
+        } else {
+          setIsExpired(true);
+        }
       }
     };
 

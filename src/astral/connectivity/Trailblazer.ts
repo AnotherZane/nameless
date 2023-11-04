@@ -3,6 +3,7 @@ import {
   useReceiverStore,
   useSenderStore,
   useSessionStore,
+  useShareStore,
 } from "../../state";
 import { IDownloader, ITrailblazeMessage } from "../interfaces";
 import {
@@ -22,7 +23,7 @@ const DefaultIceServers = [
 
 const MAX_CHUNK_SIZE = 262144;
 const DEFAULT_MESSAGE_SIZE = 65536;
-const CHUNK_META_SIZE = 5;
+const CHUNK_META_SIZE = 1;
 const DEFAULT_HIGH_WATERMARK = 1048576;
 
 class Trailblazer {
@@ -31,8 +32,8 @@ class Trailblazer {
   private connectionId: string;
   private pendingIceCandidates: RTCIceCandidate[];
 
-  private maxMessageSize: number;
-  private fileDataSize: number;
+  public maxMessageSize: number;
+  public fileDataSize: number;
   private lowWaterMark: number;
   private highWaterMark: number;
 
@@ -42,12 +43,14 @@ class Trailblazer {
   private requestedFiles: number[];
 
   private currentFileId: number;
+  private chunkStart: number;
 
   private lastChunkReceived: number;
-  // private writer: WritableStreamDefaultWriter | null;
   private downloader: IDownloader | null;
 
   private _debug: HTMLDivElement;
+
+  // public dataTransferred: number
 
   constructor(connectionId: string, iceServers: RTCIceServer[]) {
     iceServers.unshift(...DefaultIceServers);
@@ -74,15 +77,21 @@ class Trailblazer {
     this.requestedFiles = [];
 
     this.currentFileId = 0;
+    this.chunkStart = 0;
 
-    // this.writer = null;
     this.downloader = null;
 
     this._debug = window.document.getElementById("_debug")! as HTMLDivElement;
+
+    // this.dataTransferred = 0;
   }
 
   public updateConfig = (config: RTCConfiguration) =>
     this.connection.setConfiguration(config);
+
+  public close = () => {
+    this.connection.close();
+  };
 
   public createOffer = async () => {
     this.channel = this.connection.createDataChannel("nameless", {
@@ -151,6 +160,8 @@ class Trailblazer {
         this.channel.send(data);
 
         bufferedAmount += data.length;
+        // this.dataTransferred += data.length;
+        useSessionStore.getState().incrementTransfer(this.connectionId, data.length);
 
         // Pause sending if we reach the high water mark
         if (bufferedAmount >= this.highWaterMark) {
@@ -175,7 +186,7 @@ class Trailblazer {
     _internalSend();
   };
 
-  private sendFile = async (id: number) => {
+  private sendFile = async (id: number, chunk_start = 0) => {
     if (!this.channel) throw new Error("RTC Data Channel is undefined.");
     const file = useSenderStore.getState().sharedFiles.get(id);
 
@@ -185,10 +196,10 @@ class Trailblazer {
     }
 
     const fileChunks = Math.ceil(file.size / this.fileDataSize);
-    let chunk = 0;
+    let chunk = chunk_start;
 
     const listener = async () => {
-      await _internalSendFile();
+      if (this.channel?.readyState == "open") await _internalSendFile();
     };
 
     const _internalSendFile = async () => {
@@ -214,12 +225,19 @@ class Trailblazer {
 
         const msg = new FileChunkTrailblazeMessage(bytes);
         const msgBytes = msg.serialize();
-        this.channel.send(msgBytes);
+        try {
+          this.channel.send(msgBytes);
+        } catch (e) {
+          console.error(e);
+          return;
+        }
 
         chunk += 1;
         this._debug.innerText = `[Debug]\nChunks: ${chunk}`;
 
         bufferedAmount += msgBytes.length;
+        // this.dataTransferred += msgBytes.length;
+        useSessionStore.getState().incrementTransfer(this.connectionId, msgBytes.length);
         // console.log(bufferedAmount, this.channel.bufferedAmount);
 
         // Pause sending if we reach the high water mark
@@ -227,10 +245,9 @@ class Trailblazer {
           // This is a workaround due to the bug that all browsers are incorrectly calculating the
           // amount of buffered data. Therefore, the 'bufferedamountlow' event would not fire.
           if (this.channel.bufferedAmount <= this.lowWaterMark) {
-            this.timeoutHandle = window.setTimeout(
-              async () => await _internalSendFile(),
-              0
-            );
+            this.timeoutHandle = window.setTimeout(async () => {
+              if (this.channel?.readyState == "open") await _internalSendFile();
+            }, 0);
           }
           // console.log(
           //   `Paused sending, buffered amount: ${bufferedAmount} (announced: ${this.channel.bufferedAmount})`
@@ -249,12 +266,6 @@ class Trailblazer {
         this.channel.send(msg.serialize());
       }
     };
-
-    // const start = new FileTrailblazeMessage(
-    //   TrailblazeMessageType.FILE_START,
-    //   id
-    // );
-    // this.sendMessage(start);
 
     this.channel.addEventListener("bufferedamountlow", listener);
     await _internalSendFile();
@@ -301,6 +312,7 @@ class Trailblazer {
   private handleChannelMessage = async (ev: MessageEvent<ArrayBuffer>) => {
     // console.log(ev);
     const data = new Uint8Array(ev.data);
+    useSessionStore.getState().incrementTransfer(this.connectionId, data.length);
     // console.log(data);
 
     // byte 0 is always the type of message
@@ -324,8 +336,6 @@ class Trailblazer {
         this.highWaterMark = Math.max(messageSize * 8, DEFAULT_HIGH_WATERMARK);
         this.channel!.bufferedAmountLowThreshold = this.lowWaterMark;
 
-        console.log(this.channel!.bufferedAmountLowThreshold);
-
         const msg = new HandshakeTrailblazeMessage(
           TrailblazeMessageType.PONG,
           messageSize
@@ -341,12 +351,37 @@ class Trailblazer {
         this.highWaterMark = Math.max(pong.size * 8, DEFAULT_HIGH_WATERMARK);
         this.channel!.bufferedAmountLowThreshold = this.lowWaterMark;
 
-        if (useSessionStore.getState().role != ShareRole.Receiver) return;
-        const files = useReceiverStore.getState().sharedMetadata;
+        const ss = useSessionStore.getState();
+        if (ss.role != ShareRole.Receiver) return;
+        const rs = useReceiverStore.getState();
+        const files = rs.sharedMetadata;
 
-        this.sendMessage(
-          new FilesRequestTrailblazeMessage(files.map((f) => f.id))
-        );
+        if (ss.reconnect) {
+          const sorted = files
+            .filter((x) => rs.progress.get(x.id) != x.size)
+            .sort((x) => rs.progress.get(x.id) ?? 0);
+
+          const prog = rs.progress.get(sorted[0].id);
+
+          this.requestedFiles = sorted.map((f) => f.id);
+
+          this.sendMessage(
+            new FilesRequestTrailblazeMessage(
+              this.requestedFiles,
+              prog && prog > 0
+                ? Math.floor(prog / (this.fileDataSize))
+                : 0
+            )
+          );
+        } else {
+          this.requestedFiles = files
+            .sort((a, b) => a.size - b.size)
+            .map((f) => f.id);
+
+          this.sendMessage(
+            new FilesRequestTrailblazeMessage(this.requestedFiles, 0)
+          );
+        }
 
         break;
       }
@@ -356,11 +391,12 @@ class Trailblazer {
 
         this.requestedFiles.push(...filesRequest.ids);
 
-        console.log(this.requestedFiles);
+        if (filesRequest.start != 0) {
+          this.chunkStart = filesRequest.start;
+        }
 
         if (this.currentFileId == 0) {
           this.currentFileId = this.requestedFiles.shift()!;
-          // this.sendFile(this.currentFileId);
           const start = new FileTrailblazeMessage(
             TrailblazeMessageType.FILE_READY,
             this.currentFileId
@@ -372,29 +408,45 @@ class Trailblazer {
       }
       case TrailblazeMessageType.FILE_READY: {
         const id = FileTrailblazeMessage.fromArray(data).id;
-        const meta = useReceiverStore
-          .getState()
-          .sharedMetadata.find((x) => x.id == id);
+        const rs = useReceiverStore.getState();
+        const meta = rs.sharedMetadata.find((x) => x.id == id);
 
         if (!meta) {
-          // TODO: Handle this
           console.error("Unknown file...");
           return;
         }
+
+        const prog = rs.progress.get(meta.id) ?? 0;
+        this.lastChunkReceived = Math.floor(
+          prog / (this.fileDataSize)
+        );
 
         this.currentFileId = id;
 
         const state = useSessionStore.getState();
 
-        // TODO: Capabilties system
-        this.downloader = await createDownloader(meta, state.code!, state.id!);
+        if (prog == 0) {
+          this.downloader = await createDownloader(
+            meta,
+            state.code!,
+            state.id!
+          );
+        } else {
+          this.downloader = await createDownloader(
+            meta,
+            state.code!,
+            state.id!,
+            this.lastChunkReceived * (this.fileDataSize)
+          );
+        }
+
         await this.downloader.init();
         await this.sendMessage(ReadyTrailblazeMessage.instance);
 
         break;
       }
       case TrailblazeMessageType.RECEIVER_READY: {
-        this.sendFile(this.currentFileId);
+        this.sendFile(this.currentFileId, this.chunkStart);
         break;
       }
       case TrailblazeMessageType.FILE_CHUNK: {
@@ -423,6 +475,23 @@ class Trailblazer {
         );
         this.sendMessage(ack);
 
+        const idx = this.requestedFiles.indexOf(id);
+
+        if (idx > -1) {
+          this.requestedFiles.splice(idx, 1);
+        }
+
+        const ss = useSessionStore.getState();
+
+        console.log(this.requestedFiles);
+        if (this.requestedFiles.length == 0) {
+          ss.setTransferComplete(true);
+          useShareStore.getState().deleteShare(ss.id!);
+          window.onbeforeunload = null;
+        }
+
+        ss.incrementFileCount();
+
         // this.writer = null;
         this.downloader = null;
         this.currentFileId = 0;
@@ -431,8 +500,10 @@ class Trailblazer {
       }
       case TrailblazeMessageType.FILE_ACK: {
         console.log("Ack Received");
+        useSessionStore.getState().incrementFileCount();
         if (this.requestedFiles.length > 0) {
           this.currentFileId = this.requestedFiles.shift()!;
+          this.chunkStart = 0;
           console.log("Sending next file");
 
           const start = new FileTrailblazeMessage(
