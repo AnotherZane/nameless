@@ -125,15 +125,15 @@ const Home = () => {
   const shareFiles = async () => {
     if (sharedFiles.size < 1) return;
 
+    setHide(true);
     await hub.start();
     await hub.createShare();
-    setHide(true);
     window.setInterval(updateTimer, 500);
   };
 
   const downloadFiles = async () => {
-    await hub.requestRtc();
     setHide(true);
+    await hub.requestRtc();
     window.setInterval(updateTimer, 500);
   };
 
