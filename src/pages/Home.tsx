@@ -76,7 +76,7 @@ const Home = () => {
         x[1].role != ShareRole.Sender
     ).length;
 
-  const { isPending, error } = useCleanup();
+  const { isPending } = useCleanup();
 
   useEffect(() => {
     if (!isPending) {
@@ -85,7 +85,7 @@ const Home = () => {
       }
       setLoading(false);
     }
-  }, [isPending, error]);
+  }, [isPending]);
 
   useEffect(() => {
     if (role == ShareRole.Receiver) {
@@ -201,7 +201,7 @@ const Home = () => {
                     ) : (
                       <OutlinedInput
                         size="small"
-                        sx={{ minWidth: "40%" }}
+                        sx={{ minWidth: "50%" }}
                         onChange={(e) => {
                           e.preventDefault();
                         }}

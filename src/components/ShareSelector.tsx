@@ -52,7 +52,8 @@ const ShareSelector = () => {
       .filter(
         (x) =>
           x[1].state != MemberState.OwnerConnected &&
-          x[1].state != MemberState.Receiver && x[1].role != ShareRole.Sender
+          x[1].state != MemberState.Receiver &&
+          x[1].role != ShareRole.Sender
       )
       .sort((s) => s[1].created)
       .reverse()
@@ -65,7 +66,9 @@ const ShareSelector = () => {
               size="small"
               aria-label="delete"
               // TODO
-              onClick={() => console.log(sid)}
+              onClick={() => {
+                useShareStore.getState().deleteShare(sid);
+              }}
             >
               <Delete
                 fontSize="small"
