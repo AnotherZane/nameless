@@ -14,7 +14,7 @@ const App = () => {
       maxSnack={3}
       preventDuplicate
     >
-      <div id="_debug" className="absolute right-1 bottom-1"></div>
+      <div id="_debug" className="absolute right-1 bottom-1 hidden"></div>
       <div id="app" className="flex flex-col">
         <Navbar className="flex-initial" />
         <div className="flex flex-col flex-auto h-full">
