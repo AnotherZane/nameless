@@ -190,14 +190,20 @@ const Home = () => {
                 {role == ShareRole.Sender ? (
                   <>
                     {code == undefined ? (
-                      <Button
-                        className="w-[30%]"
-                        variant="contained"
-                        size="large"
-                        onClick={shareFiles}
-                      >
-                        Share
-                      </Button>
+                      <>
+                        {hide ? (
+                          <CircularProgress />
+                        ) : (
+                          <Button
+                            className="w-[30%]"
+                            variant="contained"
+                            size="large"
+                            onClick={shareFiles}
+                          >
+                            Share
+                          </Button>
+                        )}
+                      </>
                     ) : (
                       <OutlinedInput
                         size="small"
