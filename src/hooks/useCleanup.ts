@@ -87,12 +87,16 @@ const useCleanup = () => {
       const shares = useShareStore.getState().shares;
 
       for await (const [key, value] of root.entries()) {
-        const vals = value.name.split(":");
+        const vals = value.name.split("_");
         if (vals.length > 1 && shares.has(vals[1])) continue;
 
         console.log("removing", value);
 
-        await root.removeEntry(key, { recursive: true });
+        try {
+          await root.removeEntry(key, { recursive: true });
+        } catch (e) {
+          console.log(e);
+        }
       }
     }
 

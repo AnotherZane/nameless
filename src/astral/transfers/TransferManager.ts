@@ -1,8 +1,9 @@
 import { useReceiverStore } from "../../state";
 import { IDownloader } from "../interfaces";
 import { FileMetadata } from "../models";
+import { FileSyncSWDownloader } from "./FileSyncSWDownloader";
 import { FileSystemDownloader } from "./FileSystemDownloader";
-import { StorageManagerDownloader } from "./StorageManagerDownloader";
+// import { StorageManagerDownloader } from "./StorageManagerDownloader";
 import { StreamDownloader } from "./StreamDownloader";
 
 const GB = 1024 * 1024 * 1024;
@@ -33,7 +34,9 @@ const createDownloader = async (
         await window.navigator.storage.persist();
 
         if (await window.navigator.storage.persisted()) {
-          return new StorageManagerDownloader(meta, `${code}_${id}`, start);
+          // return new StorageManagerDownloader(meta, `${code}_${id}`, start);
+
+          return new FileSyncSWDownloader(meta, `${code}_${id}`, start);
         }
       }
     }
