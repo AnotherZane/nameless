@@ -18,6 +18,11 @@ const createDownloader = async (
   id: string,
   start?: number
 ): Promise<IDownloader> => {
+  // File system methods seem to have issues with ios in general
+  if (isSafariOrIOS()) {
+    return new StreamDownloader(meta.name, meta.size);
+  }
+
   if (window.navigator.storage != null) {
     const estimate = await window.navigator.storage.estimate();
     if (estimate.quota && estimate.quota > GB) {
@@ -28,7 +33,8 @@ const createDownloader = async (
         if (!fs)
           fs = await requestFileSystem(window.PERSISTENT, estimate.quota);
 
-        if (fs) return new FileSystemDownloader(fs, meta, `${code}_${id}`, start);
+        if (fs)
+          return new FileSystemDownloader(fs, meta, `${code}_${id}`, start);
       } else {
         // persist if not chrome based
         await window.navigator.storage.persist();
@@ -150,6 +156,22 @@ const requestFileSystem = (
 
 const createUploader = (file: File) => {
   console.log(file);
+};
+
+const isSafariOrIOS = () => {
+  return (
+    [
+      "iPad Simulator",
+      "iPhone Simulator",
+      "iPod Simulator",
+      "iPad",
+      "iPhone",
+      "iPod",
+    ].includes(navigator.platform) ||
+    // iPad on iOS 13 detection
+    (navigator.userAgent.includes("Mac") && "ontouchend" in document) ||
+    /^((?!chrome|android).)*safari/i.test(navigator.userAgent)
+  );
 };
 
 export {
