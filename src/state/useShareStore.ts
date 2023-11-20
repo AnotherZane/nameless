@@ -2,9 +2,13 @@ import { create } from "zustand";
 import { StorageValue, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import { MemberState, ShareRole } from "../astral/enums";
-import { nanoid } from "nanoid";
+import { customAlphabet } from "nanoid";
 import { enableMapSet } from "immer";
 import { FileMetadata } from "../astral/models";
+
+const nanoid = customAlphabet(
+  "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+);
 
 enableMapSet();
 
