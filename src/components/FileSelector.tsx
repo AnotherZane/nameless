@@ -141,7 +141,7 @@ const FileSelector = () => {
     <Paper
       elevation={4}
       className={
-        "flex flex-col self-start px-3 pt-3 md:px-5 md:pt-5 min-h-[50vh] max-h-[420px] transition-[height] duration-300 " +
+        "flex flex-col self-start px-3 py-3 md:px-5 md:pt-5 min-h-[50vh] max-h-[420px] transition-[height] duration-300 " +
         (hasFiles ? "pb-3 md:pb-5 " : role == ShareRole.Sender ? "pb-2 " : "") +
         (theme == "dark"
           ? ""

@@ -44,54 +44,49 @@ const FAQs = () => {
         experience with us.
       </Typography>
       <FAQ title="What is Astral Share?">
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam non leo non
-        elit aliquam vulputate. Curabitur pretium, eros vitae viverra ultrices,
-        turpis nisl suscipit eros, et pellentesque diam augue sed nisl. In
-        placerat leo at ante mattis, eu tempor nulla scelerisque. Vivamus vel
-        erat quis risus pharetra venenatis vitae vitae mauris. Maecenas eleifend
-        justo nec volutpat dictum. Proin eu velit a ipsum accumsan elementum
-        fringilla vitae eros. Maecenas sodales commodo scelerisque. Pellentesque
-        eu ante ut erat placerat tristique sit amet eget nunc.
+        Astral Share is a peer-to-peer file sharing web app service that
+        utilizes WebRTC technology to enable direct communication between
+        users&apos; browsers. This decentralized approach allows users to share
+        files directly with each other without the need for a centralized
+        server.
       </FAQ>
       <FAQ title="Why should I use Astral Share?">
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam non leo non
-        elit aliquam vulputate. Curabitur pretium, eros vitae viverra ultrices,
-        turpis nisl suscipit eros, et pellentesque diam augue sed nisl. In
-        placerat leo at ante mattis, eu tempor nulla scelerisque. Vivamus vel
-        erat quis risus pharetra venenatis vitae vitae mauris. Maecenas eleifend
-        justo nec volutpat dictum. Proin eu velit a ipsum accumsan elementum
-        fringilla vitae eros. Maecenas sodales commodo scelerisque. Pellentesque
-        eu ante ut erat placerat tristique sit amet eget nunc.
+        Astral Share offers a secure and efficient way to share files directly
+        between users without relying on external servers. It provides a
+        decentralized and private alternative to traditional file-sharing
+        services, ensuring faster transfers and enhanced privacy.
       </FAQ>
       <FAQ title="What is Peer-To-Peer?">
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam non leo non
-        elit aliquam vulputate. Curabitur pretium, eros vitae viverra ultrices,
-        turpis nisl suscipit eros, et pellentesque diam augue sed nisl. In
-        placerat leo at ante mattis, eu tempor nulla scelerisque. Vivamus vel
-        erat quis risus pharetra venenatis vitae vitae mauris. Maecenas eleifend
-        justo nec volutpat dictum. Proin eu velit a ipsum accumsan elementum
-        fringilla vitae eros. Maecenas sodales commodo scelerisque. Pellentesque
-        eu ante ut erat placerat tristique sit amet eget nunc.
+        Peer-to-peer (P2P) refers to a decentralized network architecture where
+        participants (peers) share resources, such as files, directly with each
+        other. In the case of Astral Share, this means that files are shared
+        directly between users&pos; web browsers without the need for a central
+        server intermediary.
       </FAQ>
       <FAQ title="Why does it feel slower?">
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam non leo non
-        elit aliquam vulputate. Curabitur pretium, eros vitae viverra ultrices,
-        turpis nisl suscipit eros, et pellentesque diam augue sed nisl. In
-        placerat leo at ante mattis, eu tempor nulla scelerisque. Vivamus vel
-        erat quis risus pharetra venenatis vitae vitae mauris. Maecenas eleifend
-        justo nec volutpat dictum. Proin eu velit a ipsum accumsan elementum
-        fringilla vitae eros. Maecenas sodales commodo scelerisque. Pellentesque
-        eu ante ut erat placerat tristique sit amet eget nunc.
+        The speed of file transfers in Astral Share can be influenced by various
+        factors, including the network conditions of the users involved. Since
+        Astral Share relies on direct communication between peers, the transfer
+        speed may be affected by the internet connection quality of both
+        parties. Additionally, larger files or slower network connections may
+        result in longer transfer times.
       </FAQ>
       <FAQ title="What is resumability?">
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam non leo non
-        elit aliquam vulputate. Curabitur pretium, eros vitae viverra ultrices,
-        turpis nisl suscipit eros, et pellentesque diam augue sed nisl. In
-        placerat leo at ante mattis, eu tempor nulla scelerisque. Vivamus vel
-        erat quis risus pharetra venenatis vitae vitae mauris. Maecenas eleifend
-        justo nec volutpat dictum. Proin eu velit a ipsum accumsan elementum
-        fringilla vitae eros. Maecenas sodales commodo scelerisque. Pellentesque
-        eu ante ut erat placerat tristique sit amet eget nunc.
+        Resumability in Astral Share refers to the capability of the application
+        to resume interrupted file transfers. If a file transfer is paused or
+        disrupted due to network issues, users can easily resume the transfer
+        from where it left off, thanks to the implementation of file system APIs
+        in modern browsers.
+      </FAQ>
+      <FAQ title="Is my data safe?">
+        Astral Share prioritizes user privacy and data security. Since the
+        service operates on a peer-to-peer model, files are shared directly
+        between users without passing through centralized servers. However,
+        it&pos;s essential to be cautious and only share files with trusted
+        individuals. Astral Share does not store files permanently, and its
+        security relies on the trustworthiness of the peers involved in the
+        file-sharing process. Always exercise discretion when sharing sensitive
+        information.
       </FAQ>
     </>
   );
